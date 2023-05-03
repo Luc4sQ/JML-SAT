@@ -28,3 +28,9 @@ py main.py -dp testfile.dimacs
 ```
 
 Frage: Variablen (oder längeninformationen) beifügen zum Set?
+
+### Quellen
+
+- Sets: https://www.w3schools.com/python/python_sets.asp
+- Tupel: https://www.w3schools.com/python/python_tuples.asp (Ausgabe damit, statt einer Liste?)
+- Map als Datenstruktur gibt es wohl nicht als Grundbibliothek, also ein $2 \times V$ Vektor als Alternative? ($V$ = Anzahl der Variablen)
