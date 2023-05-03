@@ -1,10 +1,8 @@
+# Importing some stuff
 import sys as arg
-import numpy as np
 import src.input.dimacs as sid
 
-# Importing some stuff
-
-sid.hello()
-
+# not functioning, just as a example
+KNF = sid.FileReader("../superduperKNF.knf")
 
 
