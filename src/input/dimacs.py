@@ -7,14 +7,20 @@ def FileReader(path):
         print("please retry, with a proper file")
         return 0
     else:
-        dimacsFile = open(path)
-    
+        try:
+            dimacsFile = open(path)
+        except:
+            print("Error: no file found. retry with the correct relative path and check the file!")
+            return 0
+
     # two variables for the handling of possible data we need later
     numberOfClauses = 0
     numberOfVariables = 0
 
     # THE return variable
     KNF = set()
+
+    isFormatConsistent = False
 
     for line in dimacsFile:
         
@@ -36,8 +42,15 @@ def FileReader(path):
                 numberOfVariables = convertedLine[2]
                 numberOfClauses = convertedLine[3]
 
+                if convertedLine[1] == "KNF":
+                    isFormatConsistent = True
+
             # data hustling for the KNF set
             else:
+
+                if not isFormatConsistent:
+                    print("Error: the data in the file, doesn't have the right format.")
+                    return 0
 
                 for data in convertedLine:
                     if not data == "" and (data.isnumeric() or data[0] == "-"):
