@@ -16,11 +16,11 @@ if path != 0:
 
         ########## HERE is the main procedure place. ADD CODE HERE ########## 
 
+        satisfiable = False
+        
         print(KNF)
 
-
-        
-
+        print(satisfiable)
 
         #####################################################################
 
