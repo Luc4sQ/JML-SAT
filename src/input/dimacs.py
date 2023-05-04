@@ -3,7 +3,7 @@
 def FileReader(path):
 
     # exception handler - very short one
-    if path == "" or path.split(".")[-1] != "knf" :
+    if path == "" or path.split(".")[-1] != "cnf" :
         print("please retry, with a proper file")
         return 0
     else:
@@ -17,9 +17,9 @@ def FileReader(path):
     KNF = set()
 
     for line in dimacsFile:
-
-        Clause = set()
         
+        Clause = []
+
         # ignore the commenting lines in the file
         if line[0] == "c":
             # ... Nothing
@@ -27,21 +27,25 @@ def FileReader(path):
 
         else:
             #converting lines, for iteration and better readability
-            convertedLine = line.split(" ")
+            convertedLine = line.strip().split(" ")
+
             linePrefix = convertedLine[0]
 
             # a p-line catch
-            if not linePrefix.isnumeric():
+            if linePrefix == "p":
                 numberOfVariables = convertedLine[2]
                 numberOfClauses = convertedLine[3]
 
             # data hustling for the KNF set
             else:
-                for data in convertedLine:
-                    if data.isnumeric():
-                        Clause.add(data)
 
-        KNF.add(Clause)
+                for data in convertedLine:
+                    if not data == "" and (data.isnumeric() or data[0] == "-"):
+                        Clause.append(data)
+
+                ClauseSet = frozenset(Clause)       
+
+                KNF.add(ClauseSet)
 
     dimacsFile.close()
 
