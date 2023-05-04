@@ -14,11 +14,11 @@ def FileReader(path):
     numberOfVariables = 0
 
     # THE return variable
-    KNF = {}
+    KNF = set()
 
     for line in dimacsFile:
 
-        Clause = {}
+        Clause = set()
         
         # ignore the commenting lines in the file
         if line[0] == "c":
