@@ -42,7 +42,7 @@ def FileReader(path):
                 numberOfVariables = convertedLine[2]
                 numberOfClauses = convertedLine[3]
 
-                if convertedLine[1] == "KNF":
+                if convertedLine[1] == "cnf":
                     isFormatConsistent = True
 
             # data hustling for the KNF set
