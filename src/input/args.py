@@ -9,7 +9,7 @@ def getArguments(argsForAlgorithm):
     numberOfArguments = len(argumentList)
 
     # this happens, when nonsense or nothing is supplied via arguments
-    if numberOfArguments < 1 or numberOfArguments > 2 or not argumentList[0] in (argsForAlgorithm | {"--help"}):
+    if numberOfArguments != 2 or not argumentList[0] in (argsForAlgorithm | {"--help"}):
         print("wrong arguments supplied. please type --help for more information")
         return (0,0)
     
@@ -22,7 +22,4 @@ def getArguments(argsForAlgorithm):
         return (0,0)
 
     # information about algorithm argument and returning path/arg
-    if numberOfArguments == 1:
-        return (argumentList[0],0)
-    else:
-        return (argumentList[0],argumentList[1])
+    return (argumentList[0],argumentList[1])

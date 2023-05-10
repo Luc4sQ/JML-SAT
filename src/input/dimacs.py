@@ -1,3 +1,4 @@
+import numpy as np
 # module for reading a dimacs file
 
 def FileReader(path):
@@ -18,7 +19,7 @@ def FileReader(path):
     numberOfVariables = 0
 
     # THE return variable
-    KNF = set()
+    KNF = list()
 
     isFormatConsistent = False
 
@@ -53,12 +54,12 @@ def FileReader(path):
                     return 0
 
                 for data in convertedLine:
-                    if not data == "" and (data.isnumeric() or data[0] == "-"):
-                        Clause.append(data)
+                    if data != "" and data != "0" and (data.isnumeric() or data[0] == "-"):
+                        Clause.append(int(data))
 
-                ClauseSet = frozenset(Clause)       
+                ClauseSet = np.array(Clause)       
 
-                KNF.add(ClauseSet)
+                KNF.append(ClauseSet)
 
     dimacsFile.close()
 
