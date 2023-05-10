@@ -39,7 +39,7 @@ Angenommen unsere Prozedur heißt "main.py" und es gibt
 dann führen wir unser Programm aus durch
 
 ```
-py main.py -dp ../testfile.dimacs
+py main.py -dp ../testfile.cnf
 ```
 
 Jedoch besitzt der Aufruf des Programms einen eigenen "Help Handler".
