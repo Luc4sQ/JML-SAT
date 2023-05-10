@@ -2,6 +2,7 @@
 import numpy as np
 import src.input.args as arg
 import src.input.dimacs as sid
+import src.alg.dpll as dpll
 
 # functioning code! returns a serious KNF
 arguments = {"-dp", "-dpll"}
@@ -16,13 +17,20 @@ if path != undefined:
     # AND: the file was a legit dimacs file
     if KNF != undefined:
 
+        # Initiate DPLL if parameter -dpll was given
+        if specifiedArgument == "-dpll":
+            var = list()
+            (satisfiable,variableAssignment)=dpll.output(KNF)
+            if satisfiable:
+                print(satisfiable, "\n The following variable assignment satisfies input cnf:",variableAssignment)
+            else:
+                print(satisfiable)
+
         ########## HERE is the main procedure place. ADD CODE HERE ########## 
 
-        satisfiable = False
-        
-        print(KNF)
-        
-        print(satisfiable)
+        #satisfiable = False
+        #print(KNF)
+        #print(satisfiable)
 
         #####################################################################
 
