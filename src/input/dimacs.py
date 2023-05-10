@@ -32,34 +32,39 @@ def FileReader(path):
             # ... Nothing
             pass
 
-        else:
+        # a p-line catch
+        elif line[0] == "p":
+
             #converting lines, for iteration and better readability
             convertedLine = line.strip().split(" ")
 
-            linePrefix = convertedLine[0]
+            numberOfVariables = convertedLine[2]
+            numberOfClauses = convertedLine[3]
 
-            # a p-line catch
-            if linePrefix == "p":
-                numberOfVariables = int(convertedLine[2])
-                numberOfClauses = int(convertedLine[3])
+            if convertedLine[1] == "cnf":
+                isFormatConsistent = True
 
-                if convertedLine[1] == "cnf":
-                    isFormatConsistent = True
+        # case for filtering empty lines. thanks cambridge college
+        elif len(line.strip().split(" ")) == 1:
+            continue
+
+        else:
+
+            convertedLine = line.strip().split(" ")
+
+            # case for invalid data - weird, will change maybe later
+            if not isFormatConsistent:
+                print("Error: the data in the file, doesn't have the right format.")
+                return 0
 
             # data hustling for the KNF set
-            else:
+            for data in convertedLine:
+                if data != "" and data != "0" and (data.isnumeric() or data[0] == "-"):
+                    Clause.append(int(data))
 
-                if not isFormatConsistent:
-                    print("Error: the data in the file, doesn't have the right format.")
-                    return 0
+            ClauseSet = np.array(Clause)       
 
-                for data in convertedLine:
-                    if data != "" and data != "0" and (data.isnumeric() or data[0] == "-"):
-                        Clause.append(int(data))
-
-                ClauseSet = np.array(Clause)       
-
-                KNF.append(ClauseSet)
+            KNF.append(ClauseSet)
 
     dimacsFile.close()
 
