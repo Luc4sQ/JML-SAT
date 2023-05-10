@@ -40,8 +40,8 @@ def FileReader(path):
 
             # a p-line catch
             if linePrefix == "p":
-                numberOfVariables = convertedLine[2]
-                numberOfClauses = convertedLine[3]
+                numberOfVariables = int(convertedLine[2])
+                numberOfClauses = int(convertedLine[3])
 
                 if convertedLine[1] == "cnf":
                     isFormatConsistent = True
@@ -63,7 +63,7 @@ def FileReader(path):
 
     dimacsFile.close()
 
-    return KNF
+    return (KNF,[numberOfClauses,numberOfVariables])
 
                 
 
