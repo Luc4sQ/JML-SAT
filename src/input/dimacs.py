@@ -15,17 +15,20 @@ def FileReader(path):
             return 0
 
     # two variables for the handling of possible data we need later
-    numberOfClauses = 0
-    numberOfVariables = 0
+    #numberOfClauses = 0
+    #numberOfVariables = 0
 
     # THE return variable
     KNF = list()
+    INFOS = list()
 
     isFormatConsistent = False
 
     for line in dimacsFile:
         
         Clause = []
+
+
 
         # ignore the commenting lines in the file
         if line[0] == "c":
@@ -38,10 +41,18 @@ def FileReader(path):
             #converting lines, for iteration and better readability
             convertedLine = line.strip().split(" ")
 
-            numberOfVariables = convertedLine[2]
-            numberOfClauses = convertedLine[3]
+            for data in convertedLine:
+                if data != "":
+                    if len(INFOS) == 0:
+                        INFOS.append(data)
+                    elif len(INFOS) == 1:
+                        INFOS.append(data)
+                    elif len(INFOS) == 2:
+                        INFOS.append(int(data))
+                    else:
+                        INFOS.append(int(data))
 
-            if convertedLine[1] == "cnf":
+            if INFOS[1] == "cnf":
                 isFormatConsistent = True
 
         # case for filtering empty lines. thanks cambridge college
@@ -68,7 +79,7 @@ def FileReader(path):
 
     dimacsFile.close()
 
-    return (KNF,[numberOfClauses,numberOfVariables])
+    return (KNF,INFOS)
 
                 
 

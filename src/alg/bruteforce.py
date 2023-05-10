@@ -5,8 +5,8 @@ def bruteForce(KNF, properties):
     # p1 = clause, p2 = variables
     satisfiable = True
 
-    numberOfVariables = properties[1]
-    numberOfClauses = properties[0]
+    numberOfVariables = properties[2]
+    numberOfClauses = properties[3]
     expo = 2**numberOfVariables
 
     for i in range(0,expo):
