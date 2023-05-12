@@ -43,7 +43,7 @@ def bruteForce(KNF, properties):
         if not satisfiableClause:
             continue
         else: 
-            print("",end = "\n")
+            #print("",end = "\n")
             for o in range(0, numberOfVariables):
                 if assignment[o] == 1:
                     variableAssignment.update({o+1: True})
