@@ -7,7 +7,7 @@ import src.timing.measure as ms
 import src.alg.dpll as dpll
 
 # functioning code! returns a serious KNF
-ARGUMENTS = {"-bf","-dp", "-dpll"}
+ARGUMENTS = {"-bf", "-dpll"}
 UNDEFINED = 0
 
 specifiedArgument, path = arg.getArguments(ARGUMENTS)
