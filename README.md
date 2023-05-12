@@ -2,16 +2,31 @@
 
 Zusammen programmieren wir hier eine Software, welche die Erfüllbarkeit von aussagenlogischen Formeln entscheidet und gegebenenfalls eine zulässige Belegung angibt
 
-### Eingabebeispiel: ("func" ist die map, welche die Belegung darstellt)
+### Auszug aus Main-Prozedur:
+
+Eingebunden werden unsere Module bspw. durch Aufrufe der Form
 
 ```
-import "../DP/DP.py" as dp
+import src.dp as dp
+import src.input.args as arg
+import src.input.dimacs as sid
+```
+Anschließend suchen wir den Block, in dem die Hauptprozedur läuft
+```
+if path != 0:
 
-exampleset = {{1, -2}, {-1, 2}}
+    KNF = sid.FileReader(path)
+    
+    if KNF != 0:
 
-func, satisfiable = dp.DP(exampleset)
+        ########## HERE is the main procedure place. ADD CODE HERE ########## 
 
-print("out knf is ", satisfiable, "-able")
+        if specifiedArgument == "-dp":
+            func, satisfiable = dp.DP(exampleset)
+
+        print("out knf is ", satisfiable, "-able")
+
+        #####################################################################
 ```
 
 ### Komandozeilenbeispiel
@@ -24,8 +39,10 @@ Angenommen unsere Prozedur heißt "main.py" und es gibt
 dann führen wir unser Programm aus durch
 
 ```
-py main.py -dp testfile.dimacs
+py main.py -dp ../testfile.cnf
 ```
+
+Jedoch besitzt der Aufruf des Programms einen eigenen "Help Handler".
 
 Frage: Variablen (oder längeninformationen) beifügen zum Set?
 
