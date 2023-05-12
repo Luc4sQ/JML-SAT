@@ -4,7 +4,7 @@ import numpy as np
 def bruteForce(KNF, properties):
     # p1 = clause, p2 = variables
     satisfiable = True
-
+    variableAssignment = {}
     numberOfVariables = properties[2]
     numberOfClauses = properties[3]
     expo = 2**numberOfVariables
@@ -14,7 +14,7 @@ def bruteForce(KNF, properties):
         assignment = np.zeros(numberOfVariables)
         bitIndex = i
 
-        print("Progress: ",i, " von ",expo,end = "\r")
+        #print("Progress: ",i, " von ",expo,end = "\r")
 
         for j in range(0,numberOfVariables):
             if bitIndex%2 == 1:
@@ -44,7 +44,13 @@ def bruteForce(KNF, properties):
             continue
         else: 
             print("",end = "\n")
-            return satisfiable
+            for o in range(0, numberOfVariables):
+                if assignment[o] == 1:
+                    variableAssignment.update({o+1: True})
+                else:
+                    variableAssignment.update({-1*(o+1): False})
+
+            return (satisfiable, variableAssignment)
     
     print("",end = "\n")
-    return not satisfiable
+    return (not satisfiable,variableAssignment)

@@ -7,8 +7,12 @@ def timeInSeconds(func, arg):
     start = time.perf_counter()
 
     try:
-        returnValue = func(*arg)
+        if type(arg).__name__ == "tuple":
+            returnValue = func(*arg)
+        else:
+            returnValue = func(arg)
     except:
+        print("TimeError. measure.py throws some exception")
         return (0,0)
 
     end = time.perf_counter()

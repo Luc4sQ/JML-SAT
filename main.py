@@ -4,6 +4,7 @@ import src.input.args as arg
 import src.input.dimacs as sid
 import src.alg.bruteforce as br
 import src.timing.measure as ms
+import src.alg.dpll as dpll
 
 # functioning code! returns a serious KNF
 ARGUMENTS = {"-bf","-dp", "-dpll"}
@@ -18,19 +19,34 @@ if path != UNDEFINED:
     # AND: the file was a legit dimacs file
     if KNF != UNDEFINED:
 
-        ########## HERE is the main procedure place. ADD CODE HERE ########## 
+        # Initiate DPLL if parameter -dpll was given
+        if specifiedArgument == "-dpll":
+            var = list()
 
-        satisfiable = False
+            time, output = ms.timeInSeconds(dpll.output, KNF)
+
+            satisfiable, variableAssignment = output
+
+            if satisfiable:
+                print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
+            else:
+                print(satisfiable, f"in {time:.5f} Sekunden!")
+
+
         
-        #print(KNF)
-        
+        # Initiate brute force if parameter -bf was given
         if specifiedArgument == "-bf":
 
-            time, satisfiable = ms.timeInSeconds(br.bruteForce, (KNF, properties))
-            print(satisfiable, f"in {time:.5f} Sekunden!")
+            time, output = ms.timeInSeconds(br.bruteForce, (KNF, properties))
 
+            satisfiable, variableAssignment = output
 
-        #####################################################################
+            if satisfiable:
+                print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
+            else:
+                print(satisfiable, f"in {time:.5f} Sekunden!")
+
+            #print(satisfiable, f"in {time:.5f} Sekunden!")
 
 # second case: nothing, because no proper arguments supplied
 else: 
