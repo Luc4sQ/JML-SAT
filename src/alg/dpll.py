@@ -99,5 +99,5 @@ def output(cnf):
                 variableAssignment.update({int(variable): True})
             else:
                 variableAssignment.update({int(variable): False})
-    return satisfiability, variableAssignment
+    return (satisfiability, variableAssignment)
 
