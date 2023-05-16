@@ -98,6 +98,6 @@ def output(cnf):
             if variable > 0:
                 variableAssignment.update({int(variable): True})
             else:
-                variableAssignment.update({int(variable): False})
+                variableAssignment.update({int(abs(variable)): False})
     return (satisfiability, variableAssignment)
 
