@@ -8,7 +8,7 @@ import src.alg.dpll as dpll
 import src.alg.dpll_unit as udpll
 
 # functioning code! returns a serious KNF
-ARGUMENTS = {"-bf", "-dpll", "-unit"}
+ARGUMENTS = {"-bf", "-dpll", "-udpll"}
 UNDEFINED = 0
 
 specifiedArgument, path = arg.getArguments(ARGUMENTS)
@@ -20,7 +20,7 @@ if path != UNDEFINED:
     # AND: the file was a legit dimacs file
     if KNF != UNDEFINED:
 
-        if specifiedArgument == "-unit":
+        if specifiedArgument == "-udpll":
             var = list()
 
             time, output = ms.timeInSeconds(udpll.output, KNF)
