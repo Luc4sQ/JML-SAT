@@ -6,9 +6,10 @@ import src.alg.bruteforce as br
 import src.timing.measure as ms
 import src.alg.dpll as dpll
 import src.alg.dpll_unit as udpll
+import src.alg.dpll_plus as pdpll
 
 # functioning code! returns a serious KNF
-ARGUMENTS = {"-bf", "-dpll", "-udpll"}
+ARGUMENTS = {"-bf", "-dpll", "-udpll", "-pdpll"}
 UNDEFINED = 0
 
 specifiedArgument, path = arg.getArguments(ARGUMENTS)
@@ -19,6 +20,18 @@ if path != UNDEFINED:
     
     # AND: the file was a legit dimacs file
     if KNF != UNDEFINED:
+        
+        if specifiedArgument == "-pdpll":
+            var = list()
+
+            time, output = ms.timeInSeconds(pdpll.dpll_plus, (KNF,properties))
+
+            #satisfiable, variableAssignment = output
+
+            if output == "sat":
+                print(True, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:")
+            else:
+                print(False, f"in {time:.5f} Sekunden!")
 
         if specifiedArgument == "-udpll":
             var = list()

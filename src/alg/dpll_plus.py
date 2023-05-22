@@ -2,21 +2,83 @@ import numpy as np
 import src.alg.dpll as dpll
 import src.alg.dpll_unit as udpll
 
-def getClause(KNF, list, data):
+def conflictAnalysis(KNF, lists, decisions, data):
     # Graph initialization
-    vertices = list(range(1,data[2]+1))
+    vertices = list()
+    for i in range(0,data[2]):
+        vertices.append(i+1)
+    vertices.append("empty")
     edges = list()
-    for resolutions in list:
+    
+    for resolutions in lists:
         for literal in KNF[resolutions[1]]:
-            if literal != KNF[resolutions[0]]
-                edges.append((literal,KNF[resolutions[0]]))
+            if literal != resolutions[0]:
+                edges.append((literal,resolutions[0]))
 
     # calculating conflicts
     conflicts = list()
 
-    
+    sideA = list()
+    sideB = list()
 
-    return
+    for dec in decisions:
+        sideA.append(dec)
+        vertices.remove(dec)
+    sideB.append("empty")
+    vertices.remove("empty")
+
+    for j in range(0, 2**len(vertices)):
+
+        bitIndex = j
+
+        for k in range(0,len(vertices)):
+            if bitIndex%2 == 1:
+                sideB.append(vertices[k])
+            bitIndex = int(bitIndex/2)
+
+        literals = set()
+
+        for edge in edges:
+            if edge[1] in sideB and not edge[0] in sideB:
+                literals.add(edge[0])
+
+        if len(literals) == 1:
+            if literals[0] in decisions:
+                assertionLevel = decisions.index(literals[0])
+            else:
+                assertionLevel = len(decisions)
+            return (np.array(list(literals)), assertionLevel)
+        
+        conflicts.append(np.array(list(literals)))
+
+        # reset
+        sideB = ["empty"]
+
+    mainconflict = conflicts[0]
+    for clause in conflicts:
+        if len(clause) < len(mainconflict):
+            mainconflict = clause
+
+    levels = set()
+
+    assertionLevel = len(decisions)
+
+    if len(mainconflict) == 1:
+        assertionLevel == -1
+    else:
+        for thingy in mainconflict:
+            if thingy in decisions:
+                levels.add(decisions.index(thingy))
+            else:
+                levels.add(len(decisions))
+
+        if len(levels) == 1:
+            assertionLevel = levels[0]
+        else:
+            levels.remove(max(levels))
+            assertionLevel = max(levels)
+
+    return (mainconflict,assertionLevel)
 
 def conditionedFormula(KNF, decisions):
     conditionedKNF = KNF
@@ -30,6 +92,7 @@ def expandedUnitResolution(cnf,list):
     if not cnf:
         return (cnf,list)
     
+    # returning in the special case we encounter a contradiction
     elif np.array([]) in cnf:
         index = cnf.index(np.array([]))
         new_list = list
@@ -64,28 +127,43 @@ def expandedUnitResolution(cnf,list):
             
     return (cnf,list)
 
+def isInList(array, listOfArrays):
+    for arrays in listOfArrays:
+        if np.array_equal(array, arrays):
+            return True
+    
+    return False
+
 def dpll_plus(KNF, data):
 
-    # numberOfVariables = data[2]
-    # numberOfClauses = data[3]
     decisions = list()
     conflicts = list()
 
     while True:
 
-        unitpropOutput, newList = expandedUnitResolution(list(set(conditionedFormula(KNF)) | set(conflicts)),[])
+        watchedKNF = conditionedFormula(KNF, decisions)
 
-        if np.array([]) in unitpropOutput:
+        for conflict in conflicts:
+            watchedKNF.append(conflict)
+
+        unitpropOutput, resolutedLiterals = expandedUnitResolution(watchedKNF,[])
+        print(np.array([], dtype=np.dtype(np.float64)) == unitpropOutput[0])
+        print(np.array_equal(np.array([], dtype=np.dtype(np.float64)),unitpropOutput[0]))
+        print(np.array([], dtype=np.dtype(np.float64)) in unitpropOutput)
+        print(" decision : ",decisions)
+        print(unitpropOutput)
+
+        if isInList(np.array([], dtype=np.dtype(np.float64)), unitpropOutput):
             if len(decisions) == 0:
                 return "unsat"
             else:
-                getClause(KNF, newList, data)
-                alpha = 
-
+                # conflict analysis
+                conflictClause, m = conflictAnalysis(KNF, resolutedLiterals, decisions, data)
+                while len(decisions) >= m:
+                    decisions.pop()
+                conflicts.append(conflictClause)
         else:
             if unitpropOutput != []:
-                literal = unitpropOutput[0][0]
-                assignment = literal
-                decisions.append(assignment)
+                decisions.append(unitpropOutput[0][0])
             else:
                 return "sat"
