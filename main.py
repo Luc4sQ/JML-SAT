@@ -7,9 +7,10 @@ import src.timing.measure as ms
 import src.alg.dpll as dpll
 import src.alg.dpll_unit as udpll
 import src.alg.dpll_plus as pdpll
+import src.alg.dp as dp
 
 # functioning code! returns a serious KNF
-ARGUMENTS = {"-bf", "-dpll", "-udpll", "-pdpll"}
+ARGUMENTS = {"-bf", "-dpll", "-udpll", "-pdpll", "-dp"}
 UNDEFINED = 0
 
 specifiedArgument, path = arg.getArguments(ARGUMENTS)
@@ -64,6 +65,19 @@ if path != UNDEFINED:
         if specifiedArgument == "-bf":
 
             time, output = ms.timeInSeconds(br.bruteForce, (KNF, properties))
+
+            satisfiable, variableAssignment = output
+
+            if satisfiable:
+                print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
+            else:
+                print(satisfiable, f"in {time:.5f} Sekunden!")
+
+            #print(satisfiable, f"in {time:.5f} Sekunden!")
+
+        if specifiedArgument == "-dp":
+
+            time, output = ms.timeInSeconds(dp.backtrack, (KNF, properties))
 
             satisfiable, variableAssignment = output
 
