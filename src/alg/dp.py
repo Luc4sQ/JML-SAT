@@ -8,7 +8,17 @@ def orderOfVariables(properties):
     order = []
     for var in range(1,properties[2]+1):
         order.append(var)
-    return order
+    #return order
+    orderrenewed = list(np.random.permutation(order))
+    print(orderrenewed)
+    return orderrenewed
+
+def isTautologie(clause):
+    for index1 in range(len(clause)):
+        for index2 in range(index1, len(clause)):
+            if clause[index1] == -clause[index2]:
+                return True
+    return False
 
 #this function takes a clause and insert it in the right bucket
 def fillingBucket(clause,order):
@@ -37,14 +47,24 @@ def unitResolution(var, cnf):
     return new_cnf  
 
 #resolution for two given clauses
-def resolution(clause1, clause2):
+def resolution(var, clause_pos, clause_neg):
     resolvent = []
-    for var1 in clause1:
-        if var1 not in resolvent and -var1 not in clause2:
-            resolvent.append(var1)
-    for var2 in clause2:
-        if var2 not in resolvent and -var2 not in clause1:
-            resolvent.append(var2)
+    index_pos = np.argwhere(clause_pos == var)
+    new_clause_pos = np.delete(clause_pos,index_pos)
+    index_neg = np.argwhere(clause_neg == -var)
+    new_clause_neg = np.delete(clause_neg, index_neg)
+
+    for entry1 in new_clause_pos:
+        #tautologie
+        if -entry1 in new_clause_neg:
+            return np.array([])
+        else:
+            if entry1 not in resolvent:
+                resolvent.append(entry1)
+    
+    for entry2 in new_clause_neg:
+        if entry2 not in resolvent:
+            resolvent.append(entry2)
 
     return np.array(resolvent)
 
@@ -68,10 +88,11 @@ def processingBucket(var, bucket):
     
     #filling the lists
     for clause in bucket:
-        if var in clause:
-            pos.append(clause)
-        else:
-            neg.append(clause)
+        if not isTautologie(clause):
+            if var in clause:
+                pos.append(clause)
+            else:
+                neg.append(clause)
 
     #if one of them is empty, there are no resolvents and the bucket is succesfully processed
     if len(pos)==0 or len(neg)==0:
@@ -80,7 +101,7 @@ def processingBucket(var, bucket):
     #resolution an var using all pairs of clauses from pos and neg
     for index1 in range(len(pos)):
         for index2 in range(len(neg)):
-            resolvent = resolution(pos[index1],neg[index2])
+            resolvent = resolution(var,pos[index1],neg[index2])
             if len(resolvent) != 0:
                     resolvents.append(resolvent)
     
@@ -112,7 +133,8 @@ def dp(cnf, properties):
         
         #filling the clauses into the buckets
         for clause in cnf:
-            fillingBucket(clause,order)
+            if not isTautologie(clause):
+                fillingBucket(clause,order)
         
         #checking every buckets. If the buckets is not empty, process the bucket
         for index in range(len(order)):
