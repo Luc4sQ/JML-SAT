@@ -60,7 +60,6 @@ if path != UNDEFINED:
             else:
                 print(satisfiable, f"in {time:.5f} Sekunden!")
 
-            #print(satisfiable, f"in {time:.5f} Sekunden!")
 
         if specifiedArgument == "-dp":
 
@@ -73,7 +72,6 @@ if path != UNDEFINED:
             else:
                 print(satisfiable, f"in {time:.5f} Sekunden!")
 
-            #print(satisfiable, f"in {time:.5f} Sekunden!")
 
 # second case: nothing, because no proper arguments supplied
 else: 
