@@ -27,7 +27,7 @@ def cdcl(cnf, assignment):
     dl = 0
 
     while not allVariablesAssigned():
-        x = pickBranchingVariable()
+        x = pickBranchingVariable() # heuristik?
 
         dl += 1
 
