@@ -14,16 +14,12 @@ def bruteForce(KNF, properties):
         assignment = np.zeros(numberOfVariables)
         bitIndex = i
 
-        #print("Progress: ",i, " von ",expo,end = "\r")
-
         for j in range(0,numberOfVariables):
             if bitIndex%2 == 1:
                 assignment[j] = 1
             else:
                 assignment[j] = -1
             bitIndex = int(bitIndex/2)
-
-        #print(assignment)
 
         for k in range(0,numberOfClauses):
             recentClause = KNF[k]
@@ -43,7 +39,6 @@ def bruteForce(KNF, properties):
         if not satisfiableClause:
             continue
         else: 
-            #print("",end = "\n")
             for o in range(0, numberOfVariables):
                 if assignment[o] == 1:
                     variableAssignment.update({o+1: True})
@@ -52,5 +47,4 @@ def bruteForce(KNF, properties):
 
             return (satisfiable, variableAssignment)
     
-    print("",end = "\n")
     return (not satisfiable,variableAssignment)
