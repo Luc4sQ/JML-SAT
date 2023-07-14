@@ -3,58 +3,134 @@ import numpy as np
 # the source is the solve GRASP - so PGRASP
 
 IMPLICATION_GRAPH = list() # adjacency list - stores predecessor
+
 CNF = 0 # stores cnf in numpy form (clause database)
-REDUCEDCNF = 0 # stores a conditioned form of the cnf
 VARIABLEPLACES = list() # stores for each variable, where it belongs in the clause database
+
+REDUCEDCNF = 0 # stores a conditioned form of the cnf
 VALUE_ASSIGNMENT = list() # stores value
 DECISION_TRACKER = list() # stores variables, that were decided or implied in depth d
+
 NUMBEROFVARIABLES = 0
 NUMBEROFINITIALCLAUSES = 0
 BACKTRACKCOUNTER = 0
 
+# takes a clause and a specified literal
+# if the clause (without the literal) is satisfied by our assignment it returns True
 def isClauseSatisfied(clause, specLiteral = "undefined"):
     for literal in clause:
-        if literal != specLiteral and literal < 0 and VALUE_ASSIGNMENT[abs(literal)] == 0:
+        if abs(literal) != specLiteral and literal < 0 and VALUE_ASSIGNMENT[abs(literal)] == 0:
             return True
-        elif literal != specLiteral and literal > 0 and VALUE_ASSIGNMENT[abs(literal)] == 1:
+        elif abs(literal) != specLiteral and literal > 0 and VALUE_ASSIGNMENT[abs(literal)] == 1:
             return True
     return False
 
+# takes a literal and a boolean indicator "getRemoved"
+# True -> normal conditioning operation
+# False -> restores clause with literal assumption
 def conditionCNF(literal, getRemoved): # variable = welche variabel, getRemoved = bool if it should get removed
     if getRemoved:
-        # conditioning code of melanie related to dpll
-        new_cnf = list()
-        for entry in REDUCEDCNF:
-            #if (len(entry)==0):
-            #    new_cnf.append(np.array([]))
-            if entry != "deleted" and literal not in entry:
-                if -literal in entry:
-                    index = np.argwhere(entry==-literal)
-                    new_entry = np.delete(entry,index)
-                    new_cnf.append(new_entry)
-                else:
-                    new_cnf.append(entry)
-            else:
-                new_cnf.append("deleted")  
-        REDUCEDCNF = new_cnf
+        for entries in VARIABLEPLACES[abs(literal)]:
+            if entries[1]*literal > 0 and REDUCEDCNF[entries[0]] != "deleted":
+                REDUCEDCNF[entries[0]] ="deleted"
+            elif entries[1]*literal < 0 and REDUCEDCNF[entries[0]] != "deleted":
+                REDUCEDCNF[entries[0]] = np.delete(REDUCEDCNF[entries[0]],np.argwhere(REDUCEDCNF[entries[0]]==-literal))
+
+        if literal > 0:
+            VALUE_ASSIGNMENT[abs(literal)] = 1
+        else:
+            VALUE_ASSIGNMENT[abs(literal)] = -1
+
 
     else:
         # now we want to add a removed variable back again
         for entries in VARIABLEPLACES[abs(literal)]:
             # if the clause previously was deleted cuz it was satisfied
             if REDUCEDCNF[entries[0]] == "deleted":
-                if VALUE_ASSIGNMENT[abs(literal)]*entries[1] > 0 and not isClauseSatisfied(REDUCEDCNF[entries[1]]):
+                if VALUE_ASSIGNMENT[abs(literal)]*entries[1] > 0 and not isClauseSatisfied(REDUCEDCNF[entries[1]], abs(literal)):
                     REDUCEDCNF[entries[0]] = CNF[entries[0]]
             else:
                 np.append(REDUCEDCNF[entries[0]],entries[1])
 
 
         VALUE_ASSIGNMENT[abs(literal)] = False
+        IMPLICATION_GRAPH[abs(literal)] = list()
 
+# erases the information in depth d
 def erase(d):
 
+    for variables in DECISION_TRACKER[d]:
+        conditionCNF(variables, False)
 
+    DECISION_TRACKER.pop()
 
+# ---------------------------------------------------------------------------------
+
+def greedyEvaluation():
+    
+    currentChoice = 0
+    currentValue = 0
+    maxSum = 0
+
+    # SECOND: summation over all satisfied clauses and record those assignments,
+    # which yield a higher sum than before
+
+    for index in range(len(VALUE_ASSIGNMENT)):
+        if not VALUE_ASSIGNMENT[index]:
+            # case 1: TRUE
+            setValue = 1
+            sum = 0
+
+            for clause in REDUCEDCNF:
+                for literal in clause:
+                    if literal > 0 and abs(literal) == index:
+                        sum += 1
+                        continue
+                    elif literal < 0 and abs(literal) == index:
+                        continue
+
+            if sum > maxSum:
+                currentChoice = index
+                currentValue = setValue
+                maxSum = sum
+
+            # case 2: FAlSE
+            setValue = -1
+            sum = 0
+
+            for clause in REDUCEDCNF:
+                for literal in clause:
+                    if literal < 0 and abs(literal) == index:
+                        sum += 1
+                        continue
+                    elif literal > 0 and abs(literal) == index:
+                        continue
+
+            if sum > maxSum:
+                currentChoice = index
+                currentValue = setValue
+                maxSum = sum
+
+    return (currentChoice,currentValue)    
+
+def isSatisfied():
+    for clause in REDUCEDCNF:
+        if clause != "deleted":
+            return False
+    return True
+
+def decide(d):
+    chosenVariable, assignedValue = greedyEvaluation()
+    VALUE_ASSIGNMENT[chosenVariable] = assignedValue
+    DECISION_TRACKER.append(chosenVariable)
+    conditionCNF(chosenVariable*assignedValue, True)
+
+    if isSatisfied():
+        return True
+    else:
+        return False
+
+# ---------------------------------------------------------------------------------
 
 def cdcl(cnf, properties):
     # setting the the global variable
@@ -72,8 +148,6 @@ def cdcl(cnf, properties):
             VARIABLEPLACES[abs(literal)].append([i,literal])
 
 
-
-
     if not search(0):
         return False
     else:
@@ -86,7 +160,7 @@ def search(d):
     
     while True:
         if deduce(d):
-            if search(d+1)
+            if search(d+1):
                 return True
             elif BACKTRACKCOUNTER != d:
                 erase()
@@ -94,90 +168,51 @@ def search(d):
         if not diagnose(d):
             erase()
             return False
-        
+
+def diagnose():
+    pass
+
+def thereIsUnit():
+    for clause in REDUCEDCNF:
+        if len(clause) == 1:
+            return clause[0]
+    return False
+
+def isUnsatisfied():
+    for i, clause in enumerate(REDUCEDCNF):
+        if len(clause) == 0:
+            return i
+    return False
+
 def deduce(d):
-    while thereIsUnit() or isUnsatisfied():
-        if isUnsatisfied():
-            IMPLICATION_GRAPH.append(["k",]) # something !!!
+    unit = thereIsUnit()
+    satis = isUnsatisfied()
+
+    while unit or satis:
+
+        if satis:
+            andecent = list()
+            for literal in CNF[satis]:
+                IMPLICATION_GRAPH[0].append(literal) # something !!!
+
             return False
-        if thereIsUnit():
-            IMPLICATION_GRAPH.append() # something!!!
+        
+        if unit:
+            conditionCNF(unit, True)
+            
+            for literal in CNF
+            IMPLICATION_GRAPH[abs(unit)] # something!!!
+
             DECISION_ASSIGNMENT[literal] = d
             if literal < 0:
                 VALUE_ASSIGNMENT[literal] = -1
             else:
                 VALUE_ASSIGNMENT[literal] = 1
 
+        unit = thereIsUnit()
+        satis = isUnsatisfied()
+
     return True
 
-def decide(d):
-    chosenVariable, assignedValue = greedyEvaluation()
-    IMPLICATION_GRAPH[chosenVariable].append(True)
-    VALUE_ASSIGNMENT[chosenVariable] = assignedValue
-    DECISION_ASSIGNMENT[chosenVariable] = d
 
-    if isSatisfied():
-        return True
-    else:
-        return False
-
-def greedyEvaluation():
-    reducedCNF = list()
-    # FIRST: reduce the clause, so the greedy algorithm dont takes clauses, which
-    # are already satisfied anyway
-    for clause in CNF:
-        counter = 0
-        for literal in clause:
-            if VALUE_ASSIGNMENT[abs(literal)] == 1 and literal > 0:
-                continue
-            elif VALUE_ASSIGNMENT[abs(literal)] == 0 and literal < 0:
-                continue
-            else:
-                counter += 1
-        if counter == len(clause):
-            reducedCNF.append(clause)
     
-    currentChoice = 0
-    currentValue = 0
-    maxSum = 0
-
-    # SECOND: summation over all satisfied clauses and record those assignments,
-    # which yield a higher sum than before
-
-    for index in range(len(VALUE_ASSIGNMENT)):
-        if not VALUE_ASSIGNMENT[index]:
-            # case 1: TRUE
-            setValue = 1
-            sum = 0
-
-            for clause in reducedCNF:
-                for literal in clause:
-                    if literal > 0 and abs(literal) == index:
-                        sum += 1
-                        continue
-                    elif literal < 0 and abs(literal) == index:
-                        continue
-
-            if sum > maxSum:
-                currentChoice = index
-                currentValue = setValue
-                maxSum = sum
-
-            # case 2: FAlSE
-            setValue = 0
-            sum = 0
-
-            for clause in reducedCNF:
-                for literal in clause:
-                    if literal < 0 and abs(literal) == index:
-                        sum += 1
-                        continue
-                    elif literal > 0 and abs(literal) == index:
-                        continue
-
-            if sum > maxSum:
-                currentChoice = index
-                currentValue = setValue
-                maxSum = sum
-
-    return (currentChoice,currentValue)        
