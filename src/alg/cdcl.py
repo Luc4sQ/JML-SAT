@@ -2,40 +2,96 @@ import numpy as np
 
 # the source is the solve GRASP - so PGRASP
 
-IMPLICATION_GRAPH = list()
-CNF = 0
-VALUE_ASSIGNMENT = list()
-DECISION_ASSIGNMENT = list()
+IMPLICATION_GRAPH = list() # adjacency list - stores predecessor
+CNF = 0 # stores cnf in numpy form (clause database)
+REDUCEDCNF = 0 # stores a conditioned form of the cnf
+VARIABLEPLACES = list() # stores for each variable, where it belongs in the clause database
+VALUE_ASSIGNMENT = list() # stores value
+DECISION_TRACKER = list() # stores variables, that were decided or implied in depth d
+NUMBEROFVARIABLES = 0
+NUMBEROFINITIALCLAUSES = 0
+BACKTRACKCOUNTER = 0
 
-def cdcl(cnf):
+def isClauseSatisfied(clause, specLiteral = "undefined"):
+    for literal in clause:
+        if literal != specLiteral and literal < 0 and VALUE_ASSIGNMENT[abs(literal)] == 0:
+            return True
+        elif literal != specLiteral and literal > 0 and VALUE_ASSIGNMENT[abs(literal)] == 1:
+            return True
+    return False
+
+def conditionCNF(literal, getRemoved): # variable = welche variabel, getRemoved = bool if it should get removed
+    if getRemoved:
+        # conditioning code of melanie related to dpll
+        new_cnf = list()
+        for entry in REDUCEDCNF:
+            #if (len(entry)==0):
+            #    new_cnf.append(np.array([]))
+            if entry != "deleted" and literal not in entry:
+                if -literal in entry:
+                    index = np.argwhere(entry==-literal)
+                    new_entry = np.delete(entry,index)
+                    new_cnf.append(new_entry)
+                else:
+                    new_cnf.append(entry)
+            else:
+                new_cnf.append("deleted")  
+        REDUCEDCNF = new_cnf
+
+    else:
+        # now we want to add a removed variable back again
+        for entries in VARIABLEPLACES[abs(literal)]:
+            # if the clause previously was deleted cuz it was satisfied
+            if REDUCEDCNF[entries[0]] == "deleted":
+                if VALUE_ASSIGNMENT[abs(literal)]*entries[1] > 0 and not isClauseSatisfied(REDUCEDCNF[entries[1]]):
+                    REDUCEDCNF[entries[0]] = CNF[entries[0]]
+            else:
+                np.append(REDUCEDCNF[entries[0]],entries[1])
+
+
+        VALUE_ASSIGNMENT[abs(literal)] = False
+
+def erase(d):
+
+
+
+
+def cdcl(cnf, properties):
     # setting the the global variable
+    NUMBEROFVARIABLES = properties[2]
+    NUMBEROFINITIALCLAUSES = properties[3]
     CNF = cnf
-    variableSize = 0
-    for i in range(variableSize)
+    REDUCEDCNF = cnf
+    for i in range(NUMBEROFVARIABLES + 1):
         IMPLICATION_GRAPH.append(list())
-        DECISION_ASSIGNMENT.append(False)
+        VARIABLEPLACES.append(list())
         VALUE_ASSIGNMENT.append(False)
 
-    backtracker = 0
+    for i, clause in enumerate(cnf):
+        for literal in clause:
+            VARIABLEPLACES[abs(literal)].append([i,literal])
 
-    if not search(0,backtracker):
+
+
+
+    if not search(0):
         return False
     else:
         return True
 
-def search(d, beta):
+def search(d):
 
     if decide(d):
         return True
     
     while True:
         if deduce(d):
-            if search(d+1, beta)
+            if search(d+1)
                 return True
-            elif beta != d:
+            elif BACKTRACKCOUNTER != d:
                 erase()
                 return False
-        if not diagnose(d, beta):
+        if not diagnose(d):
             erase()
             return False
         
@@ -48,7 +104,7 @@ def deduce(d):
             IMPLICATION_GRAPH.append() # something!!!
             DECISION_ASSIGNMENT[literal] = d
             if literal < 0:
-                VALUE_ASSIGNMENT[literal] = 0
+                VALUE_ASSIGNMENT[literal] = -1
             else:
                 VALUE_ASSIGNMENT[literal] = 1
 
@@ -125,7 +181,3 @@ def greedyEvaluation():
                 maxSum = sum
 
     return (currentChoice,currentValue)        
-
-
-def erase():
-    pass
