@@ -9,7 +9,9 @@ VARIABLEPLACES = list() # stores for each variable, where it belongs in the clau
 
 REDUCEDCNF = 0 # stores a conditioned form of the cnf
 VALUE_ASSIGNMENT = list() # stores value
+DECISION_ASSIGNMENT = list() # stores Decision level for each variable
 DECISION_TRACKER = list() # stores variables, that were decided or implied in depth d
+
 
 NUMBEROFVARIABLES = 0
 NUMBEROFINITIALCLAUSES = 0
@@ -122,7 +124,7 @@ def isSatisfied():
 def decide(d):
     chosenVariable, assignedValue = greedyEvaluation()
     VALUE_ASSIGNMENT[chosenVariable] = assignedValue
-    DECISION_TRACKER.append(chosenVariable)
+    DECISION_TRACKER.append([chosenVariable])
     conditionCNF(chosenVariable*assignedValue, True)
 
     if isSatisfied():
@@ -169,13 +171,56 @@ def search(d):
             erase()
             return False
 
-def diagnose():
-    pass
+def analyseGraph():
+
+    Graph = IMPLICATION_GRAPH
+
+    indexVector = [0]
+    newClause = set()
+
+    while len(indexVector) != 0:
+        
+        listy = list()
+
+        for previousNode in indexVector:
+            if len(Graph[previousNode]) == 0:
+                newClause.add(-1*previousNode*VALUE_ASSIGNMENT[previousNode])
+                continue
+            
+            listy = listy + Graph[previousNode]
+
+            for node in Graph[previousNode]:
+                if DECISION_ASSIGNMENT[previousNode] != DECISION_ASSIGNMENT[node]:
+                    newClause.add(-1*node*VALUE_ASSIGNMENT[node])
+
+        indexVector = listy
+
+
+    return np.array(list(newClause))
+
+
+
+def diagnose(d):
+    if len(IMPLICATION_GRAPH[0]) != 0:
+        newClause = analyseGraph()
+        CNF = CNF.append(newClause)
+        BACKTRACKCOUNTER = DECISION_ASSIGNMENT[abs(newClause[0])]
+        for literal in newClause:
+            if BACKTRACKCOUNTER < DECISION_ASSIGNMENT[abs(literal)]:
+                BACKTRACKCOUNTER = DECISION_ASSIGNMENT[abs(literal)]
+
+        REDUCEDCNF.append("deleted")
+
+        if BACKTRACKCOUNTER != d:
+            return False
+        
+        return True
+    
 
 def thereIsUnit():
-    for clause in REDUCEDCNF:
+    for i, clause in enumerate(REDUCEDCNF):
         if len(clause) == 1:
-            return clause[0]
+            return (clause[0],i)
     return False
 
 def isUnsatisfied():
@@ -198,12 +243,15 @@ def deduce(d):
             return False
         
         if unit:
-            conditionCNF(unit, True)
+            literal, clauseIndex = unit
+            conditionCNF(literal, True)
             
-            for literal in CNF
-            IMPLICATION_GRAPH[abs(unit)] # something!!!
+            for lit in CNF[clauseIndex]:
+                if lit != literal:
+                    IMPLICATION_GRAPH[abs(literal)].append(abs(lit)) # something!!!
 
-            DECISION_ASSIGNMENT[literal] = d
+            DECISION_TRACKER[-1].append(literal)
+
             if literal < 0:
                 VALUE_ASSIGNMENT[literal] = -1
             else:
