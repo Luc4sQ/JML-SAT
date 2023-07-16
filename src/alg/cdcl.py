@@ -1,6 +1,10 @@
 import numpy as np
+import src.timing.measure as ms
+import src.alg.dpll as dp
 
 # the source is the solve GRASP - so PGRASP
+
+# global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
 
 IMPLICATION_GRAPH = list() # adjacency list - stores predecessor
 
@@ -16,12 +20,47 @@ DECISION_TRACKER = list() # stores variables, that were decided or implied in de
 NUMBEROFVARIABLES = 0
 NUMBEROFINITIALCLAUSES = 0
 BACKTRACKCOUNTER = 0
+ZEROINDICATOR = 0
+
+def evaluateCNF():
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
+
+    testCNF = REDUCEDCNF.copy()
+    holdAssignment = VALUE_ASSIGNMENT.copy()
+
+    REDUCEDCNF = CNF.copy()
+
+    for depthlist in DECISION_TRACKER:
+        for variable in depthlist:
+            conditionCNF(variable*VALUE_ASSIGNMENT[variable], True)
+
+    for i, clause in enumerate(REDUCEDCNF):
+        if (not isinstance(clause, np.ndarray) or not isinstance(testCNF[i], np.ndarray)) and ( isinstance(clause, np.ndarray) or  isinstance(testCNF[i], np.ndarray)):
+            test2cnf = REDUCEDCNF.copy()
+            REDUCEDCNF = testCNF.copy()
+            VALUE_ASSIGNMENT = holdAssignment.copy()
+
+            return (False, test2cnf)
+
+        if isinstance(clause, np.ndarray) and isinstance(testCNF[i], np.ndarray) and not set(clause) ==  set(testCNF[i]):
+            test2cnf = REDUCEDCNF.copy()
+            REDUCEDCNF = testCNF.copy()
+            VALUE_ASSIGNMENT = holdAssignment.copy()
+
+            return (False, test2cnf)
+    
+    test2cnf = REDUCEDCNF.copy()
+    REDUCEDCNF = testCNF.copy()
+    VALUE_ASSIGNMENT = holdAssignment.copy()
+        
+    return (True, test2cnf)
 
 # takes a clause and a specified literal
 # if the clause (without the literal) is satisfied by our assignment it returns True
 def isClauseSatisfied(clause, specLiteral = "undefined"):
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
     for literal in clause:
-        if abs(literal) != specLiteral and literal < 0 and VALUE_ASSIGNMENT[abs(literal)] == 0:
+        if abs(literal) != specLiteral and literal < 0 and  VALUE_ASSIGNMENT[abs(literal)] == -1:
             return True
         elif abs(literal) != specLiteral and literal > 0 and VALUE_ASSIGNMENT[abs(literal)] == 1:
             return True
@@ -31,12 +70,17 @@ def isClauseSatisfied(clause, specLiteral = "undefined"):
 # True -> normal conditioning operation
 # False -> restores clause with literal assumption
 def conditionCNF(literal, getRemoved): # variable = welche variabel, getRemoved = bool if it should get removed
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
+
+
     if getRemoved:
         for entries in VARIABLEPLACES[abs(literal)]:
-            if entries[1]*literal > 0 and REDUCEDCNF[entries[0]] != "deleted":
+            if (entries[1]*literal) > 0 and  isinstance(REDUCEDCNF[entries[0]], np.ndarray):
                 REDUCEDCNF[entries[0]] ="deleted"
-            elif entries[1]*literal < 0 and REDUCEDCNF[entries[0]] != "deleted":
-                REDUCEDCNF[entries[0]] = np.delete(REDUCEDCNF[entries[0]],np.argwhere(REDUCEDCNF[entries[0]]==-literal))
+            elif (entries[1]*literal) < 0 and isinstance(REDUCEDCNF[entries[0]], np.ndarray):
+                npList = REDUCEDCNF[entries[0]]
+                REDUCEDCNF[entries[0]] = np.delete(npList,np.argwhere(REDUCEDCNF[entries[0]]==-literal))
+
 
         if literal > 0:
             VALUE_ASSIGNMENT[abs(literal)] = 1
@@ -48,19 +92,25 @@ def conditionCNF(literal, getRemoved): # variable = welche variabel, getRemoved 
         # now we want to add a removed variable back again
         for entries in VARIABLEPLACES[abs(literal)]:
             # if the clause previously was deleted cuz it was satisfied
-            if REDUCEDCNF[entries[0]] == "deleted":
-                if VALUE_ASSIGNMENT[abs(literal)]*entries[1] > 0 and not isClauseSatisfied(REDUCEDCNF[entries[1]], abs(literal)):
-                    REDUCEDCNF[entries[0]] = CNF[entries[0]]
+            if not isinstance(REDUCEDCNF[entries[0]], np.ndarray):
+                if (VALUE_ASSIGNMENT[abs(entries[1])]*entries[1]) > 0 and not isClauseSatisfied(CNF[entries[0]], abs(entries[1])):
+                    clausecopy = CNF[entries[0]].copy()
+                    indexes = list()
+                    for i, lit in enumerate(clausecopy):
+                        if VALUE_ASSIGNMENT[abs(lit)]*lit >= 0:
+                            indexes.append(i)
+                            
+                    REDUCEDCNF[entries[0]] = CNF[entries[0]][indexes].copy()
             else:
-                np.append(REDUCEDCNF[entries[0]],entries[1])
+                REDUCEDCNF[entries[0]] = np.append(REDUCEDCNF[entries[0]],entries[1])
 
 
-        VALUE_ASSIGNMENT[abs(literal)] = False
-        IMPLICATION_GRAPH[abs(literal)] = list()
+        VALUE_ASSIGNMENT[abs(literal)] = 0
+        IMPLICATION_GRAPH[abs(literal)] = set()
 
 # erases the information in depth d
 def erase(d):
-
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
     for variables in DECISION_TRACKER[d]:
         conditionCNF(variables, False)
 
@@ -69,30 +119,29 @@ def erase(d):
 # ---------------------------------------------------------------------------------
 
 def greedyEvaluation():
-    
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
     currentChoice = 0
     currentValue = 0
     maxSum = 0
 
-    # SECOND: summation over all satisfied clauses and record those assignments,
-    # which yield a higher sum than before
 
     for index in range(len(VALUE_ASSIGNMENT)):
-        if not VALUE_ASSIGNMENT[index]:
-            # case 1: TRUE
+        if index != 0 and VALUE_ASSIGNMENT[index] == 0:
+
             setValue = 1
             sum = 0
 
             for clause in REDUCEDCNF:
-                for literal in clause:
-                    if literal > 0 and abs(literal) == index:
-                        sum += 1
-                        continue
-                    elif literal < 0 and abs(literal) == index:
-                        continue
+                if isinstance(clause, np.ndarray):
+                    for literal in clause:
+                        if literal > 0 and abs(literal) == index:
+                            sum += 1
+                            continue
+                        elif literal < 0 and abs(literal) == index:
+                            continue
 
-            if sum > maxSum:
-                currentChoice = index
+            if sum >= maxSum:
+                currentChoice = index 
                 currentValue = setValue
                 maxSum = sum
 
@@ -101,31 +150,80 @@ def greedyEvaluation():
             sum = 0
 
             for clause in REDUCEDCNF:
-                for literal in clause:
-                    if literal < 0 and abs(literal) == index:
-                        sum += 1
-                        continue
-                    elif literal > 0 and abs(literal) == index:
-                        continue
+                if isinstance(clause, np.ndarray):
+                    for literal in clause:
+                        if literal < 0 and abs(literal) == index:
+                            sum += 1
+                            continue
+                        elif literal > 0 and abs(literal) == index:
+                            continue
 
-            if sum > maxSum:
-                currentChoice = index
+            if sum >= maxSum:
+                currentChoice = index 
                 currentValue = setValue
                 maxSum = sum
 
     return (currentChoice,currentValue)    
 
+def easifyReducedCNF():
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
+    newcnf = REDUCEDCNF.copy()
+    index = 0
+    while len(newcnf) != index:
+        if not isinstance(newcnf[index],np.ndarray):
+            del newcnf[index]
+        else:
+            index += 1
+    
+    return newcnf
+
+
+
 def isSatisfied():
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
     for clause in REDUCEDCNF:
-        if clause != "deleted":
+        if isinstance(clause, np.ndarray):
             return False
     return True
 
 def decide(d):
-    chosenVariable, assignedValue = greedyEvaluation()
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
+    
+    
+    #for i, values in enumerate(VALUE_ASSIGNMENT):
+    #    if i != 0:
+    #        if values == 0:
+    #            chosenVariable = i
+    #            assignedValue = 1
+    
+    newcnf = easifyReducedCNF()
+    if len(newcnf) == 0:
+        return True
+
+    try: 
+        chosenVariable = dp.findMostCommonVar(newcnf)
+    except:
+        print(REDUCEDCNF)
+        for i, values in enumerate(VALUE_ASSIGNMENT):
+            if i != 0:
+                if values == 0:
+                    chosenVariable = i
+                    assignedValue = 1
+
+
+    #print(chosenVariable)
+    if chosenVariable > 0:
+        assignedValue = 1
+    else:
+        assignedValue = -1
+
+    chosenVariable = abs(int(chosenVariable))
+    #chosenVariable, assignedValue = greedyEvaluation()
     VALUE_ASSIGNMENT[chosenVariable] = assignedValue
     DECISION_TRACKER.append([chosenVariable])
+    DECISION_ASSIGNMENT[chosenVariable] = d
     conditionCNF(chosenVariable*assignedValue, True)
+    
 
     if isSatisfied():
         return True
@@ -134,18 +232,21 @@ def decide(d):
 
 # ---------------------------------------------------------------------------------
 
-def cdcl(cnf, properties):
-    # setting the the global variable
+def cdcl(cnnf, properties):
+
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
     NUMBEROFVARIABLES = properties[2]
     NUMBEROFINITIALCLAUSES = properties[3]
-    CNF = cnf
-    REDUCEDCNF = cnf
-    for i in range(NUMBEROFVARIABLES + 1):
-        IMPLICATION_GRAPH.append(list())
-        VARIABLEPLACES.append(list())
-        VALUE_ASSIGNMENT.append(False)
+    CNF = cnnf.copy()
+    REDUCEDCNF = cnnf.copy()
 
-    for i, clause in enumerate(cnf):
+    for i in range(NUMBEROFVARIABLES + 1):
+        IMPLICATION_GRAPH.append(set())
+        VARIABLEPLACES.append(list())
+        VALUE_ASSIGNMENT.append(0)
+        DECISION_ASSIGNMENT.append(-1)
+
+    for i, clause in enumerate(cnnf):
         for literal in clause:
             VARIABLEPLACES[abs(literal)].append([i,literal])
 
@@ -157,110 +258,160 @@ def cdcl(cnf, properties):
 
 def search(d):
 
-    if decide(d):
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
+    
+    #same, realform = evaluateCNF()
+    #
+    # if not same:
+    #    exit()
+
+    decideTime, decideOutput = ms.timeInSeconds(decide,d)
+    if decideOutput:
         return True
     
+    
     while True:
-        if deduce(d):
+        deduceTime, deduceOutput = ms.timeInSeconds(deduce,d)
+        #print(d)
+
+        if deduceOutput:
             if search(d+1):
                 return True
             elif BACKTRACKCOUNTER != d:
-                erase()
+                erase(d)
                 return False
-        if not diagnose(d):
-            erase()
+        
+        diagnoseTime, diagnoseOutput = ms.timeInSeconds(diagnose,d)
+        if not diagnoseOutput:
+            erase(d)
             return False
+        
+        erase(d)
+        #print()
+        #print("Times:")
+        #print("DEDUCE: ", deduceTime)
+        #print("DECIDE: ", decideTime)
+        #print("DIAGNOSE: ", diagnoseTime)
+
+#----------------------------------------------------------------------------------
 
 def analyseGraph():
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
+    Graph = IMPLICATION_GRAPH.copy()
 
-    Graph = IMPLICATION_GRAPH
-
-    indexVector = [0]
+    indexVector = set([0])
     newClause = set()
 
     while len(indexVector) != 0:
         
-        listy = list()
+        listy = set()
 
         for previousNode in indexVector:
             if len(Graph[previousNode]) == 0:
                 newClause.add(-1*previousNode*VALUE_ASSIGNMENT[previousNode])
                 continue
             
-            listy = listy + Graph[previousNode]
+            listy = listy | Graph[previousNode]
 
             for node in Graph[previousNode]:
-                if DECISION_ASSIGNMENT[previousNode] != DECISION_ASSIGNMENT[node]:
+                if previousNode != 0 and DECISION_ASSIGNMENT[previousNode] != DECISION_ASSIGNMENT[node]:
                     newClause.add(-1*node*VALUE_ASSIGNMENT[node])
 
         indexVector = listy
 
+    
+    IMPLICATION_GRAPH[0] = set()
 
     return np.array(list(newClause))
 
-
-
 def diagnose(d):
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER, ZEROINDICATOR
     if len(IMPLICATION_GRAPH[0]) != 0:
+
         newClause = analyseGraph()
-        CNF = CNF.append(newClause)
+        for literal in newClause:
+            VARIABLEPLACES[abs(literal)].append([len(CNF),literal])
+
+
+        CNF.append(newClause)
+
         BACKTRACKCOUNTER = DECISION_ASSIGNMENT[abs(newClause[0])]
+
         for literal in newClause:
             if BACKTRACKCOUNTER < DECISION_ASSIGNMENT[abs(literal)]:
                 BACKTRACKCOUNTER = DECISION_ASSIGNMENT[abs(literal)]
+        if d == 0:
+            ZEROINDICATOR += 1
+        if ZEROINDICATOR > 1:
+            BACKTRACKCOUNTER = -1
 
-        REDUCEDCNF.append("deleted")
+        REDUCEDCNF.append(np.array([], dtype=int))
 
+        DECISION_ASSIGNMENT[0] = -1
         if BACKTRACKCOUNTER != d:
+            for literal in newClause:
+                IMPLICATION_GRAPH[0].add(abs(literal))
+                
+            DECISION_ASSIGNMENT[0] = d - 1
             return False
         
         return True
     
+    return True
+    
+#-----------------------------------------------------------------------------------
 
 def thereIsUnit():
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
     for i, clause in enumerate(REDUCEDCNF):
         if len(clause) == 1:
             return (clause[0],i)
     return False
 
 def isUnsatisfied():
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
     for i, clause in enumerate(REDUCEDCNF):
         if len(clause) == 0:
             return i
     return False
 
 def deduce(d):
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER, ZEROINDICATOR
     unit = thereIsUnit()
     satis = isUnsatisfied()
 
     while unit or satis:
 
         if satis:
-            andecent = list()
-            for literal in CNF[satis]:
-                IMPLICATION_GRAPH[0].append(literal) # something !!!
 
+            for literal in CNF[satis]:
+                IMPLICATION_GRAPH[0].add(abs(literal)) # something !!!
+
+            DECISION_ASSIGNMENT[0] = d
             return False
-        
         if unit:
             literal, clauseIndex = unit
             conditionCNF(literal, True)
-            
             for lit in CNF[clauseIndex]:
-                if lit != literal:
-                    IMPLICATION_GRAPH[abs(literal)].append(abs(lit)) # something!!!
+                
+                if abs(lit) != abs(literal):
+                    IMPLICATION_GRAPH[abs(literal)].add(abs(lit)) # something!!!
 
-            DECISION_TRACKER[-1].append(literal)
+            if len(DECISION_TRACKER) == d + 1:
+                DECISION_TRACKER[-1].append(abs(literal))
+            else:
+                DECISION_TRACKER.append([abs(literal)])
+                
+            DECISION_ASSIGNMENT[abs(literal)] = d
+
 
             if literal < 0:
-                VALUE_ASSIGNMENT[literal] = -1
+                VALUE_ASSIGNMENT[abs(literal)] = -1
             else:
-                VALUE_ASSIGNMENT[literal] = 1
+                VALUE_ASSIGNMENT[abs(literal)] = 1
+
 
         unit = thereIsUnit()
         satis = isUnsatisfied()
 
     return True
-
-
-    

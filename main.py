@@ -7,9 +7,10 @@ import src.timing.measure as ms
 import src.alg.dpll as dpll
 import src.alg.dpll_unit as udpll
 import src.alg.dp as dp
+import src.alg.cdcl as cdcl
 
 # functioning code! returns a serious KNF
-ARGUMENTS = {"-bf", "-dpll", "-udpll", "-dp"}
+ARGUMENTS = {"-bf", "-dpll", "-udpll", "-dp", "-cdcl"}
 UNDEFINED = 0
 
 specifiedArgument, path = arg.getArguments(ARGUMENTS)
@@ -20,6 +21,21 @@ if path != UNDEFINED:
     
     # AND: the file was a legit dimacs file
     if KNF != UNDEFINED:
+
+        
+        if specifiedArgument == "-cdcl":
+            var = list()
+
+            time, output = ms.timeInSeconds(cdcl.cdcl, (KNF,properties))
+
+            satisfiable = output
+
+            if satisfiable:
+                print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:"," lol no")
+            else:
+                print(satisfiable, f"in {time:.5f} Sekunden!")
+
+
 
         if specifiedArgument == "-udpll":
             var = list()
