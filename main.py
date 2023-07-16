@@ -7,9 +7,10 @@ import src.timing.measure as ms
 import src.alg.dpll as dpll
 import src.alg.dpll_unit as udpll
 import src.alg.dp as dp
+import src.alg.dpll_visual as dpll_visual
 
 # functioning code! returns a serious KNF
-ARGUMENTS = {"-bf", "-dpll", "-udpll", "-dp"}
+ARGUMENTS = {"-bf", "-dpll","-dpll_visual", "-udpll", "-dp"}
 UNDEFINED = 0
 
 specifiedArgument, path = arg.getArguments(ARGUMENTS)
@@ -45,6 +46,17 @@ if path != UNDEFINED:
                 print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
             else:
                 print(satisfiable, f"in {time:.5f} Sekunden!")
+        
+        # Initiate the visualized version of DPLL if parameter -dpll_visual was given
+        if specifiedArgument == "-dpll_visual":
+            var = list()
+
+            time, output = ms.timeInSeconds(dpll_visual.output,KNF)
+
+            if satisfiable:
+                print(satisfiable, "\n The following variable assignment satisfies input cnf:",variableAssignment)
+            else:
+                print(satisfiable)
 
 
         
