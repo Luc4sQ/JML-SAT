@@ -290,7 +290,7 @@ def search(d):
         #print()
         #print("Times:")
         #print("DEDUCE: ", deduceTime)
-        #print("DECIDE: ", decideTime)
+        print("DECIDE: ", decideTime,"             ",deduceTime,"                   ",diagnoseTime, end="\r")
         #print("DIAGNOSE: ", diagnoseTime)
 
 #----------------------------------------------------------------------------------
