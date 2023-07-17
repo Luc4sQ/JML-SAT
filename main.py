@@ -31,7 +31,7 @@ if path != UNDEFINED:
             satisfiable = output
 
             if satisfiable:
-                print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:"," lol no")
+                print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:"," not implemented yet")
             else:
                 print(satisfiable, f"in {time:.5f} Sekunden!")
 

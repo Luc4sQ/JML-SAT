@@ -1,6 +1,7 @@
 import numpy as np
 import src.timing.measure as ms
 import src.alg.dpll as dp
+from sys import exit
 
 # the source is the solve GRASP - so PGRASP
 
@@ -21,6 +22,7 @@ NUMBEROFVARIABLES = 0
 NUMBEROFINITIALCLAUSES = 0
 BACKTRACKCOUNTER = 0
 ZEROINDICATOR = 0
+RANDOMINDEX = 0
 
 def evaluateCNF():
     global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
@@ -111,10 +113,12 @@ def conditionCNF(literal, getRemoved): # variable = welche variabel, getRemoved 
 # erases the information in depth d
 def erase(d):
     global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
-    for variables in DECISION_TRACKER[d]:
-        conditionCNF(variables, False)
-
-    DECISION_TRACKER.pop()
+    if len(DECISION_TRACKER) == d+1:
+        #print(DECISION_TRACKER[-1])
+        for variables in DECISION_TRACKER[d]:
+            conditionCNF(variables, False)
+        DECISION_TRACKER.pop()
+        #print("ERASED Number ",d," so ",DECISION_TRACKER)
 
 # ---------------------------------------------------------------------------------
 
@@ -202,8 +206,11 @@ def decide(d):
 
     try: 
         chosenVariable = dp.findMostCommonVar(newcnf)
+        #print(chosenVariable)
     except:
-        print(REDUCEDCNF)
+        #print(CNF)
+        #print(REDUCEDCNF)
+        #print(REDUCEDCNF)
         for i, values in enumerate(VALUE_ASSIGNMENT):
             if i != 0:
                 if values == 0:
@@ -216,14 +223,19 @@ def decide(d):
         assignedValue = 1
     else:
         assignedValue = -1
-
+    
     chosenVariable = abs(int(chosenVariable))
     #chosenVariable, assignedValue = greedyEvaluation()
     VALUE_ASSIGNMENT[chosenVariable] = assignedValue
+    if len(DECISION_TRACKER) != d:
+        DECISION_TRACKER.append([])
     DECISION_TRACKER.append([chosenVariable])
     DECISION_ASSIGNMENT[chosenVariable] = d
+    #print(chosenVariable," : ",assignedValue, " : ",d, "  DECIDED")
     conditionCNF(chosenVariable*assignedValue, True)
     
+    
+    #print("DECIDED: ",chosenVariable*assignedValue)
 
     if isSatisfied():
         return True
@@ -258,11 +270,11 @@ def cdcl(cnnf, properties):
 
 def search(d):
 
-    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER, RANDOMINDEX
     
     #same, realform = evaluateCNF()
     #
-    # if not same:
+    #if not same:
     #    exit()
 
     decideTime, decideOutput = ms.timeInSeconds(decide,d)
@@ -284,13 +296,37 @@ def search(d):
         diagnoseTime, diagnoseOutput = ms.timeInSeconds(diagnose,d)
         if not diagnoseOutput:
             erase(d)
+            #print("gone")
             return False
         
+        
+        #print("depth<we: ",d, "but its long ",len(DECISION_TRACKER)-1)
         erase(d)
         #print()
         #print("Times:")
         #print("DEDUCE: ", deduceTime)
-        print("DECIDE: ", decideTime,"             ",deduceTime,"                   ",diagnoseTime, end="\r")
+        print("DECIDE: ",d, " ",len(CNF),end="\r")#" ",REDUCEDCNF[-1], decideTime,"             ",deduceTime,"                   ",diagnoseTime, "   ",end="\r")
+        #print(CNF)
+        #if len(CNF[-100]) == 1:
+        #    exit()
+        #print("depth<we: ",d, "but its long ",len(DECISION_TRACKER)-1)
+        #if len(REDUCEDCNF[-1]) == 1 and REDUCEDCNF[-1][0] == 67:
+           #RANDOMINDEX += 1
+            #print(RANDOMINDEX)
+        if RANDOMINDEX > 5:
+            #print(REDUCEDCNF)
+            #print(CNF)
+            for  i, clause in enumerate(REDUCEDCNF):
+                if len(clause) == 1:
+                    pass
+                    print(clause)
+                    print(CNF[i])
+                    print(DECISION_TRACKER)
+            exit()
+        #print(VALUE_ASSIGNMENT[67])
+        #if VALUE_ASSIGNMENT[80] == -1 and len(DECISION_TRACKER) > 4:
+        #    exit() 
+        #print(REDUCEDCNF)
         #print("DIAGNOSE: ", diagnoseTime)
 
 #----------------------------------------------------------------------------------
@@ -320,6 +356,7 @@ def analyseGraph():
         indexVector = listy
 
     
+    #print(IMPLICATION_GRAPH[0])
     IMPLICATION_GRAPH[0] = set()
 
     return np.array(list(newClause))
@@ -332,14 +369,20 @@ def diagnose(d):
         for literal in newClause:
             VARIABLEPLACES[abs(literal)].append([len(CNF),literal])
 
-
+        #for clause in CNF:
+        #    if not np.array_equal(clause,newClause):
         CNF.append(newClause)
 
+        #print(newClause)
+        #print(np.array(VALUE_ASSIGNMENT)[abs(newClause)])
+        #print(np.array(DECISION_ASSIGNMENT)[abs(newClause)])
+        #print(DECISION_TRACKER)
         BACKTRACKCOUNTER = DECISION_ASSIGNMENT[abs(newClause[0])]
 
         for literal in newClause:
             if BACKTRACKCOUNTER < DECISION_ASSIGNMENT[abs(literal)]:
                 BACKTRACKCOUNTER = DECISION_ASSIGNMENT[abs(literal)]
+        #print("BAGGY: ",BACKTRACKCOUNTER, " but ",d)
         if d == 0:
             ZEROINDICATOR += 1
         if ZEROINDICATOR > 1:
@@ -347,14 +390,23 @@ def diagnose(d):
 
         REDUCEDCNF.append(np.array([], dtype=int))
 
+        #print(REDUCEDCNF)
+
+        #if np.array_equal(REDUCEDCNF[0], np.array([], dtype=int)):
+        #    print(REDUCEDCNF)
+        #    exit()
+
         DECISION_ASSIGNMENT[0] = -1
         if BACKTRACKCOUNTER != d:
-            for literal in newClause:
-                IMPLICATION_GRAPH[0].add(abs(literal))
+        #    for literal in newClause:
+        #        IMPLICATION_GRAPH[0].add(abs(literal))
                 
-            DECISION_ASSIGNMENT[0] = d - 1
+        #    DECISION_ASSIGNMENT[0] = d - 1
             return False
         
+        #if len(newClause) == 1:
+        #    exit()
+
         return True
     
     return True
@@ -363,7 +415,8 @@ def diagnose(d):
 
 def thereIsUnit():
     global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
-    for i, clause in enumerate(REDUCEDCNF):
+    
+    for i, clause in reversed(list(enumerate(REDUCEDCNF))):
         if len(clause) == 1:
             return (clause[0],i)
     return False
@@ -372,18 +425,19 @@ def isUnsatisfied():
     global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
     for i, clause in enumerate(REDUCEDCNF):
         if len(clause) == 0:
-            return i
+            #print(i)
+            return i+1
     return False
 
 def deduce(d):
     global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER, ZEROINDICATOR
     unit = thereIsUnit()
     satis = isUnsatisfied()
-
+    #print("deph: ",d," but decisiontracker ",len(DECISION_TRACKER))
     while unit or satis:
 
         if satis:
-
+            satis -= 1
             for literal in CNF[satis]:
                 IMPLICATION_GRAPH[0].add(abs(literal)) # something !!!
 
@@ -392,11 +446,12 @@ def deduce(d):
         if unit:
             literal, clauseIndex = unit
             conditionCNF(literal, True)
+            #print("DEDUCED: ",literal)
             for lit in CNF[clauseIndex]:
                 
                 if abs(lit) != abs(literal):
                     IMPLICATION_GRAPH[abs(literal)].add(abs(lit)) # something!!!
-
+            
             if len(DECISION_TRACKER) == d + 1:
                 DECISION_TRACKER[-1].append(abs(literal))
             else:
@@ -409,6 +464,7 @@ def deduce(d):
                 VALUE_ASSIGNMENT[abs(literal)] = -1
             else:
                 VALUE_ASSIGNMENT[abs(literal)] = 1
+            #print(abs(literal)," : ",VALUE_ASSIGNMENT[abs(literal)], " : ",d)
 
 
         unit = thereIsUnit()
