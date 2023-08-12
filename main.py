@@ -14,24 +14,16 @@ import src.timing.statistics as st
 import src.alg.dpll_visual as dpll_visual
 
 # functioning code! returns a serious KNF
-ARGUMENTS = {"-bf", "-dpll","-dpll_visual", "-udpll", "-dpllple","-dpllple_visual", "-udpllple", "-udpll_visual", "-dp", "-DPLLcomp", "-HEURcomp", "-generateCNF","-multiHEURcomp","-multiHEURcomp_dpll","-multiDPLLcomp","-cdcl"}
+ARGUMENTS = {"-bf", "-dpll","-dpll_visual", "-udpll", "-dpllple","-dpllple_visual", "-udpllple", "-udpll_visual", "-dp", "-DPLLcomp","-DPLLcomp_slow", "-HEURcomp", "-generateCNF","-multiHEURcomp","-multiHEURcomp_dpll","-multiDPLLcomp","-cdcl","-myStat"}
 UNDEFINED = 0
 
 specifiedArgument, path = arg.getArguments(ARGUMENTS)
 
 # first case: everything read properly
 if path != UNDEFINED:
-
-    try:
-        KNF, properties = sid.FileReader(path)
-    except:
-        data = st.makeMultipleKNFs(path, specifiedArgument)
-        values = st.reportStatistics(data)
-        print("standard deviation: ",values[1], " and mean: ",values[0])
-        exit()
     
     # also check weather a comparison of algorithms should be done since the path specified will then be for folder not files
-    if specifiedArgument not in ["-DPLLcomp","-HEURcomp","-generateCNF","-multiHEURcomp","-multiDPLLcomp","-multiHEURcomp_dpll"]:
+    if specifiedArgument not in ["-DPLLcomp","-HEURcomp","-generateCNF","-multiHEURcomp","-multiDPLLcomp","-multiHEURcomp_dpll","-myStat"]:
         KNF, properties = sid.FileReader(path)
     
         # AND: the file was a legit dimacs file
@@ -48,8 +40,6 @@ if path != UNDEFINED:
                     print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:"," not implemented yet")
                 else:
                     print(satisfiable, f"in {time:.5f} Sekunden!")
-
-
 
             # Initiate DPLL if parameter -dpll was given
             if specifiedArgument == "-dpll":
@@ -164,10 +154,18 @@ if path != UNDEFINED:
                 else:
                     print(satisfiable, f"in {time:.5f} Sekunden!")
 
+    if specifiedArgument == "-myStat":
+        data = st.makeMultipleKNFs(path, "-cdcl")
+        values = st.reportStatistics(data)
+        print("standard deviation: ",values[1], " and mean: ",values[0])
 
     if specifiedArgument == "-DPLLcomp":
 
-            comp.dpllComp(path)
+            comp.dpllComp(path, False)
+
+    if specifiedArgument == "-DPLLcomp_slow":
+
+            comp.dpllComp(path, True)
 
 
     if specifiedArgument == "-multiDPLLcomp":
