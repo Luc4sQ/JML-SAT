@@ -4,7 +4,7 @@ import src.input.dimacs as sid
 import src.timing.measure as ms
 import src.alg.bruteforce as br
 import src.alg.dpll as dpll
-import src.alg.dpll_unit as udpll
+#import src.alg.dpll_unit as udpll
 import src.alg.dp as dp
 import src.alg.cdcl as cdcl
 
@@ -30,7 +30,7 @@ def makeMultipleKNFs(path, arg):
             time, output = ms.timeInSeconds(cdcl.cdcl, (cnf,properties))
 
         if arg == "-udpll":
-            time, output = ms.timeInSeconds(udpll.output, cnf)
+            #time, output = ms.timeInSeconds(udpll.output, cnf)
 
         if arg == "-dpll":
             time, output = ms.timeInSeconds(dpll.output, cnf)
