@@ -2,22 +2,18 @@
 import numpy as np
 import os
 import src.input.dimacs as sid
-import src.alg.bruteforce as br
 import src.timing.measure as ms
 import src.alg.dpll as dpll
-import src.alg.dpll_unit as udpll
-import src.alg.dpll_unit_ple as udpllple
-import src.alg.dpll_ple as dpllple
-import src.alg.dp as dp
-import src.alg.dpll_visual as dpll_visual
-import src.alg.dpll_unit_visual as udpll_visual
+
 
 #######################################################################################################
 ########### DPLL, uDPLL AND uDPLLple ##################################################################
 #######################################################################################################
 
+# compare the multiple versions of dpll based on files in a given folder
 def dpllComp(path):
 
+    # if the files in the folder were written by this program, we can extract information from the folder name
     selfGeneratedCNF = True
 
     # TODO: if no CNFs are in folder, print error
@@ -26,7 +22,7 @@ def dpllComp(path):
         
     else:
 
-        out_path = "".join([path, "SATstats.txt"])
+        out_path = "".join([path, "SATstats_dpll.txt"])
         stats_dat = open(out_path,"w+")
 
         # TODO: add info about System test was run on, date and time, ...
@@ -39,9 +35,6 @@ def dpllComp(path):
         if len(files) >= stepCount:
             for j in range(1,stepCount):
                 controlPoints = np.append(controlPoints,files[j*round(len(files)/stepCount)])
-        
-        #print(controlPoints)
-            
 
         # define the empty arrays in which the stats will be written during the actual measurements
         DPLLresList = np.array([])
@@ -49,36 +42,36 @@ def dpllComp(path):
         DPLLpleresList = np.array([])
         uDPLLpleresList = np.array([])
 
+        # keep track of how many files were considered and how many were satisfiable 
         SATcount = 0
         CNFcount = 0
 
         # iterativeley measure time it took to determine satisfiablilty for each of the algorythms
         for file in files:
-            print(file,path)
-            #TODO: sinnvolle Fehlermeldung hinzufügen
-            #print(file)
+
             if file.endswith("cnf"):
 
                 CNFcount = CNFcount + 1
 
+                # extract cnf
                 wholePath = "".join([path,file])
                 cnf, properties = sid.FileReader(wholePath)
 
-                print("DPLL")
-                timeDPLL, (satisfiableDPLL, variableAssignment) = ms.timeInSeconds(dpll.output, cnf)
+                # run the different versions of dpll on the specified files
 
-                print("dDPLL")
-                timeUDPLL, (satisfiableUDPLL, variableAssignment) = ms.timeInSeconds(udpll.output, cnf)
+                timeDPLL, (satisfiableDPLL, variableAssignment) = ms.timeInSeconds(dpll.output_dpll, cnf)
 
-                print("DPLLple")
-                timeDPLLple, (satisfiableDPLLple, variableAssignment) = ms.timeInSeconds(dpllple.output, cnf)
+                timeUDPLL, (satisfiableUDPLL, variableAssignment) = ms.timeInSeconds(dpll.output_udpll, cnf)
 
-                print("uDPLLple")
-                timeUDPLLple, (satisfiableUDPLLple, variableAssignment) = ms.timeInSeconds(udpllple.output, cnf)
+                timeDPLLple, (satisfiableDPLLple, variableAssignment) = ms.timeInSeconds(dpll.output_dpllple, cnf)
 
+                timeUDPLLple, (satisfiableUDPLLple, variableAssignment) = ms.timeInSeconds(dpll.output_udpllple, cnf)
+
+                # test weather we got different results for satisfiability for the various versions and print error message if so
                 if not satisfiableDPLL == satisfiableUDPLL and satisfiableDPLL == satisfiableUDPLLple and satisfiableDPLL == satisfiableDPLLple:
                     print("ERROR: file",file,"resulted in different SAT results: DPLL:",satisfiableDPLL,"uDPLL:",satisfiableUDPLL,"uDPLLple:",satisfiableUDPLLple)
                 else:
+                    # append the results to the respective lists of results
                     SATcount = SATcount+1
                     DPLLresList = np.append(DPLLresList,timeDPLL)
                     uDPLLresList = np.append(uDPLLresList,timeUDPLL)
@@ -108,19 +101,12 @@ def dpllComp(path):
         if selfGeneratedCNF == True:
 
             folderName = path.split("/")[-2]
-            #print(folderName)
             varNum = folderName.split("vars")[0]
-            #print(varNum)
             clausCountDet = "DET" if "vars_DET" in folderName else "ND"
-            #print(ClausCountDet)
             clauseCount = folderName.split("clauseCount")[0].split(clausCountDet)[-1]
-            #print(ClauseCount)
             clausLenDet = "DET" if "clauseCount_DET" in folderName else "ND"
-            #print(ClausLenDet)
             clauseLen = folderName.split("clauseLength")[0].split(clausLenDet)[-1]
-            #print(ClauseCount)
             SATstatus = folderName.split("_")[-1]
-            #print(SATstatus)
 
             csv = "".join([SATstatus,",",varNum,",",clauseCount,",",clausCountDet,",",clauseLen,",",clausLenDet,",","DPLL,",str(round(np.mean(DPLLresList),decimals)),",",str(round(np.std(DPLLresList),decimals)),"\n",
                         SATstatus,",",varNum,",",clauseCount,",",clausCountDet,",",clauseLen,",",clausLenDet,",","uDPLL,",str(round(np.mean(uDPLLresList),decimals)),",",str(round(np.std(uDPLLresList),decimals)),"\n",
@@ -129,13 +115,11 @@ def dpllComp(path):
             
         else:
             csv = ""
-        #TODO: print results for all cnfs?
 
-        #print("done")
         return(csv)
 
 
-def heuristicsComp(path):
+def heuristicsComp(path,dpllVariant):
 
     # set a parameter telling us weather the CNF is generated by this program, in this case, information can be extracted from the folder name to create
     # a cnv file containing the results
@@ -160,9 +144,6 @@ def heuristicsComp(path):
         if len(files) >= stepCount:
             for j in range(1,stepCount):
                 controlPoints = np.append(controlPoints,files[j*round(len(files)/stepCount)])
-        
-        #print(controlPoints)
-            
 
         # define the empty arrays in which the stats will be written during the actual measurements
         RANDresList = np.array([])
@@ -177,22 +158,24 @@ def heuristicsComp(path):
 
         # iterativeley measure time it took to determine satisfiablilty for each of the algorythms
         for file in files:
-            #TODO: sinnvolle Fehlermeldung hinzufügen
-            #print(file)
+
             if file.endswith("cnf"):
 
                 CNFcount = CNFcount + 1
 
+                # extract cnf
                 wholePath = "".join([path,file])
-                
                 cnf, properties = sid.FileReader(wholePath)
 
-                timeRAND, (satisfiableRAND, variableAssignment) = ms.timeInSecondsHeuristics(udpll.output, cnf, "RAND")
-                timeMOMS, (satisfiableMOMS, variableAssignment) = ms.timeInSecondsHeuristics(udpll.output, cnf, "MOMS")
-                timeJWOS, (satisfiableJWOS, variableAssignment) = ms.timeInSecondsHeuristics(udpll.output, cnf, "JWOS")
-                timeJWTS, (satisfiableJWTS, variableAssignment) = ms.timeInSecondsHeuristics(udpll.output, cnf, "JWTS")
-                timeDLCS, (satisfiableDLCS, variableAssignment) = ms.timeInSecondsHeuristics(udpll.output, cnf, "DLCS")
-                timeDLIS, (satisfiableDLIS, variableAssignment) = ms.timeInSecondsHeuristics(udpll.output, cnf, "DLIS")
+                # choose weather to run the tests with dpll or udpll based on what was specified
+                alg = dpll.output_dpll if dpllVariant == "dpll" else dpll.output_udpll
+
+                timeRAND, (satisfiableRAND, variableAssignment) = ms.timeInSecondsHeuristics(alg, cnf, "RAND")
+                timeMOMS, (satisfiableMOMS, variableAssignment) = ms.timeInSecondsHeuristics(alg, cnf, "MOMS")
+                timeJWOS, (satisfiableJWOS, variableAssignment) = ms.timeInSecondsHeuristics(alg, cnf, "JWOS")
+                timeJWTS, (satisfiableJWTS, variableAssignment) = ms.timeInSecondsHeuristics(alg, cnf, "JWTS")
+                timeDLCS, (satisfiableDLCS, variableAssignment) = ms.timeInSecondsHeuristics(alg, cnf, "DLCS")
+                timeDLIS, (satisfiableDLIS, variableAssignment) = ms.timeInSecondsHeuristics(alg, cnf, "DLIS")
 
                 if not satisfiableRAND == satisfiableMOMS == satisfiableJWOS == satisfiableJWTS == satisfiableDLCS == satisfiableDLIS:
                     pass
@@ -213,7 +196,7 @@ def heuristicsComp(path):
         decimals = 4
 
         # calculate mean and std and write to file
-        stats_dat.write("Comparison of uDPLL with different search heuristics \n\n")
+        stats_dat.write("".join(["Comparison of",dpllVariant,"with different search heuristics \n\n"]))
         stats_dat.write("".join(["Tests were run on ",str(len(files))," CNF formulas \n\n"]))
         stats_dat.write("\n\nSummary: \n\n")
         stats_dat.write("Average time to determine satifyability status in seconds: \n")
@@ -230,52 +213,46 @@ def heuristicsComp(path):
         if selfGeneratedCNF == True:
 
             folderName = path.split("/")[-2]
-            #print(folderName)
             varNum = folderName.split("vars")[0]
-            #print(varNum)
             clausCountDet = "DET" if "vars_DET" in folderName else "ND"
-            #print(ClausCountDet)
             clauseCount = folderName.split("clauseCount")[0].split(clausCountDet)[-1]
-            #print(ClauseCount)
             clausLenDet = "DET" if "clauseCount_DET" in folderName else "ND"
-            #print(ClausLenDet)
             clauseLen = folderName.split("clauseLength")[0].split(clausLenDet)[-1]
-            #print(ClauseCount)
             SATstatus = folderName.split("_")[-1]
-            #print(SATstatus)
 
-            csv = "".join([SATstatus,",",varNum,",",clauseCount,",",clausCountDet,",",clauseLen,",",clausLenDet,",","RAND,",str(round(np.mean(RANDresList),decimals)),",",str(round(np.std(RANDresList),decimals)),"\n",
-                        SATstatus,",",varNum,",",clauseCount,",",clausCountDet,",",clauseLen,",",clausLenDet,",","MOMS,",str(round(np.mean(MOMSresList),decimals)),",",str(round(np.std(MOMSresList),decimals)),"\n",
-                        SATstatus,",",varNum,",",clauseCount,",",clausCountDet,",",clauseLen,",",clausLenDet,",","JWOS,",str(round(np.mean(JWOSresList),decimals)),",",str(round(np.std(JWOSresList),decimals)),"\n",
-                        SATstatus,",",varNum,",",clauseCount,",",clausCountDet,",",clauseLen,",",clausLenDet,",","JWTS,",str(round(np.mean(JWTSresList),decimals)),",",str(round(np.std(JWTSresList),decimals)),"\n",
-                        SATstatus,",",varNum,",",clauseCount,",",clausCountDet,",",clauseLen,",",clausLenDet,",","DLIS,",str(round(np.mean(DLISresList),decimals)),",",str(round(np.std(DLISresList),decimals)),"\n",
-                        SATstatus,",",varNum,",",clauseCount,",",clausCountDet,",",clauseLen,",",clausLenDet,",","DLCS,",str(round(np.mean(DLCSresList),decimals)),",",str(round(np.std(DLCSresList),decimals)),"\n"])
+            csv = "".join([dpllVariant,",",SATstatus,",",varNum,",",clauseCount,",",clausCountDet,",",clauseLen,",",clausLenDet,",","RAND,",str(round(np.mean(RANDresList),decimals)),",",str(round(np.std(RANDresList),decimals)),"\n",
+                        dpllVariant,",",SATstatus,",",varNum,",",clauseCount,",",clausCountDet,",",clauseLen,",",clausLenDet,",","MOMS,",str(round(np.mean(MOMSresList),decimals)),",",str(round(np.std(MOMSresList),decimals)),"\n",
+                        dpllVariant,",",SATstatus,",",varNum,",",clauseCount,",",clausCountDet,",",clauseLen,",",clausLenDet,",","JWOS,",str(round(np.mean(JWOSresList),decimals)),",",str(round(np.std(JWOSresList),decimals)),"\n",
+                        dpllVariant,",",SATstatus,",",varNum,",",clauseCount,",",clausCountDet,",",clauseLen,",",clausLenDet,",","JWTS,",str(round(np.mean(JWTSresList),decimals)),",",str(round(np.std(JWTSresList),decimals)),"\n",
+                        dpllVariant,",",SATstatus,",",varNum,",",clauseCount,",",clausCountDet,",",clauseLen,",",clausLenDet,",","DLIS,",str(round(np.mean(DLISresList),decimals)),",",str(round(np.std(DLISresList),decimals)),"\n",
+                        dpllVariant,",",SATstatus,",",varNum,",",clauseCount,",",clausCountDet,",",clauseLen,",",clausLenDet,",","DLCS,",str(round(np.mean(DLCSresList),decimals)),",",str(round(np.std(DLCSresList),decimals)),"\n"])
             
         else:
             csv = ""
-        #TODO: print results for all cnfs?
 
-        #print("done")
         return(csv)
 
 
 # function to process files in multiple folders at once
-def mutipleHeuristicComp(path):
-    folders = os.listdir(path)
+def mutipleHeuristicComp(path,dpllVariant):
 
-    #print(folders)
+    # generate list of all the folders
+    folders = os.listdir(path)
 
     if len(folders)==0:
         print("ERROR: folder is empty, pass a folder containing multiple folders with cnfs")
     else:
-        outPath = "".join([path, "heuristicComparison.csv"])
+        # generate a csv file the summary of the comparison will be written to
+        outPath = "".join([path, "heuristicComparison_",dpllVariant,".csv"])
         csvDat = open(outPath,"w+")
-        csvDat.write("Satisfiability,Vars,ClauseCount,ClauseCountDet,ClauseLen,ClauseLenDet,Heuristic,AverageS,SD\n")
+        csvDat.write("dpllVariant,Satisfiability,Vars,ClauseCount,ClauseCountDet,ClauseLen,ClauseLenDet,Heuristic,AverageS,SD\n")
+        
+        # run tests on the files in each of the folders and write summarizing info to the csv
         for folder in folders:
             folderPath = "".join([path,folder,"/"])
             if os.path.isdir(folderPath):
                 if len(os.listdir(folderPath))>1:
-                    csv = heuristicsComp(folderPath)
+                    csv = heuristicsComp(folderPath,dpllVariant)
                     csvDat.write(csv)
                     print("".join([folder," processed"]))
                 else:
@@ -286,18 +263,20 @@ def mutipleHeuristicComp(path):
         csvDat.close
 
 
-
+# function to process files in multiple folders at once
 def mutipleDPLLComp(path):
-    folders = os.listdir(path)
 
-    #print(folders)
+    # generate list of all the folders
+    folders = os.listdir(path)
 
     if len(folders)==0:
         print("ERROR: folder is empty, pass a folder containing multiple folders with cnfs")
     else:
+        # generate a csv file the summary of the comparison will be written to
         outPath = "".join([path, "DPLLComparison.csv"])
         csvDat = open(outPath,"w+")
         csvDat.write("Satisfiability,Vars,ClauseCount,ClauseCountDet,ClauseLen,ClauseLenDet,DPLLVariant,AverageS,SD\n")
+        # run tests on the files in each of the folders and write summarizing info to the csv
         for folder in folders:
             folderPath = "".join([path,folder,"/"])
             if os.path.isdir(folderPath):
