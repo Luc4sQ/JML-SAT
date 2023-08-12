@@ -20,3 +20,23 @@ def timeInSeconds(func, arg):
     timeSpended = end - start
 
     return (timeSpended, returnValue)
+
+
+def timeInSecondsHeuristics(func, arg, heuristics):
+
+    start = time.perf_counter()
+    
+    try:
+        if type(arg).__name__ == "tuple":
+            returnValue = func(*arg,heuristics)
+        else:
+            returnValue = func(arg,heuristics)
+    except:
+        print("TimeError. measure.py throws some exception")
+        return (0,0)
+
+    end = time.perf_counter()
+
+    timeSpended = end - start
+
+    return (timeSpended, returnValue)
