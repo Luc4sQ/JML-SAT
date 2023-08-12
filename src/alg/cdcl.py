@@ -246,7 +246,7 @@ def decide(d):
 
 def cdcl(cnnf, properties):
 
-    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER
+    global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER,RANDOMINDEX,ZEROINDICATOR
     NUMBEROFVARIABLES = properties[2]
     NUMBEROFINITIALCLAUSES = properties[3]
     CNF = cnnf.copy()
@@ -262,10 +262,42 @@ def cdcl(cnnf, properties):
         for literal in clause:
             VARIABLEPLACES[abs(literal)].append([i,literal])
 
-
+    print(VARIABLEPLACES)
     if not search(0):
+        IMPLICATION_GRAPH = list() # adjacency list - stores predecessor
+
+        CNF = 0 # stores cnf in numpy form (clause database)
+        VARIABLEPLACES = list() # stores for each variable, where it belongs in the clause database
+
+        REDUCEDCNF = 0 # stores a conditioned form of the cnf
+        VALUE_ASSIGNMENT = list() # stores value
+        DECISION_ASSIGNMENT = list() # stores Decision level for each variable
+        DECISION_TRACKER = list() # stores variables, that were decided or implied in depth d
+
+
+        NUMBEROFVARIABLES = 0
+        NUMBEROFINITIALCLAUSES = 0
+        BACKTRACKCOUNTER = 0
+        ZEROINDICATOR = 0
+        RANDOMINDEX = 0
         return False
     else:
+        IMPLICATION_GRAPH = list() # adjacency list - stores predecessor
+
+        CNF = 0 # stores cnf in numpy form (clause database)
+        VARIABLEPLACES = list() # stores for each variable, where it belongs in the clause database
+
+        REDUCEDCNF = 0 # stores a conditioned form of the cnf
+        VALUE_ASSIGNMENT = list() # stores value
+        DECISION_ASSIGNMENT = list() # stores Decision level for each variable
+        DECISION_TRACKER = list() # stores variables, that were decided or implied in depth d
+
+
+        NUMBEROFVARIABLES = 0
+        NUMBEROFINITIALCLAUSES = 0
+        BACKTRACKCOUNTER = 0
+        ZEROINDICATOR = 0
+        RANDOMINDEX = 0
         return True
 
 def search(d):
@@ -305,7 +337,7 @@ def search(d):
         #print()
         #print("Times:")
         #print("DEDUCE: ", deduceTime)
-        print("DECIDE: ",d, " ",len(CNF),end="\r")#" ",REDUCEDCNF[-1], decideTime,"             ",deduceTime,"                   ",diagnoseTime, "   ",end="\r")
+        #print("DECIDE: ",d, " ",len(CNF),end="\r")#" ",REDUCEDCNF[-1], decideTime,"             ",deduceTime,"                   ",diagnoseTime, "   ",end="\r")
         #print(CNF)
         #if len(CNF[-100]) == 1:
         #    exit()
@@ -319,9 +351,9 @@ def search(d):
             for  i, clause in enumerate(REDUCEDCNF):
                 if len(clause) == 1:
                     pass
-                    print(clause)
-                    print(CNF[i])
-                    print(DECISION_TRACKER)
+                    #print(clause)
+                    #print(CNF[i])
+                    #print(DECISION_TRACKER)
             exit()
         #print(VALUE_ASSIGNMENT[67])
         #if VALUE_ASSIGNMENT[80] == -1 and len(DECISION_TRACKER) > 4:

@@ -8,6 +8,7 @@ import src.alg.dpll as dpll
 import src.alg.dpll_unit as udpll
 import src.alg.dp as dp
 import src.alg.cdcl as cdcl
+import src.timing.statistics as st
 
 # functioning code! returns a serious KNF
 ARGUMENTS = {"-bf", "-dpll", "-udpll", "-dp", "-cdcl"}
@@ -17,7 +18,13 @@ specifiedArgument, path = arg.getArguments(ARGUMENTS)
 
 # first case: everything read properly
 if path != UNDEFINED:
-    KNF, properties = sid.FileReader(path)
+    try:
+        KNF, properties = sid.FileReader(path)
+    except:
+        data = st.makeMultipleKNFs(path, specifiedArgument)
+        values = st.reportStatistics(data)
+        print("standard deviation: ",values[1], " and mean: ",values[0])
+        exit()
     
     # AND: the file was a legit dimacs file
     if KNF != UNDEFINED:
@@ -25,7 +32,7 @@ if path != UNDEFINED:
         
         if specifiedArgument == "-cdcl":
             var = list()
-
+            print(KNF)
             time, output = ms.timeInSeconds(cdcl.cdcl, (KNF,properties))
 
             satisfiable = output
