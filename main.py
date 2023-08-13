@@ -27,6 +27,8 @@ with cp.Profile() as profile:
     var = list()
     time, output = ms.timeInSeconds(cdcl.cdcl, (KNF,properties))
 
+    output = cdcl.cdcl(KNF,properties)
+
     satisfiable = output
     if satisfiable:
         print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:"," not implemented yet")
