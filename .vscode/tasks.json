@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "austin",
+            "file": "main.py",
+            "args": [
+                "-cdcl", 
+                "../gut20/uf20-01.cnf"
+            ],
+            "label": "Profile main.py"
+        }
+    ]
+
+}

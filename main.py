@@ -13,11 +13,36 @@ import src.timing.statistics as st
 
 import src.alg.dpll_visual as dpll_visual
 
+import cProfile as cp
+import pstats as ps
+import tuna as tu
+
 # functioning code! returns a serious KNF
 ARGUMENTS = {"-bf", "-dpll","-dpll_visual", "-udpll", "-dpllple","-dpllple_visual", "-udpllple", "-udpll_visual", "-dp", "-DPLLcomp","-DPLLcomp_slow", "-HEURcomp", "-generateCNF","-multiHEURcomp","-multiHEURcomp_dpll","-multiDPLLcomp","-cdcl","-myStat"}
 UNDEFINED = 0
 
+
+with cp.Profile() as profile:
+    KNF, properties = sid.FileReader("../20gut/uf20-01.cnf")
+    var = list()
+    time, output = ms.timeInSeconds(cdcl.cdcl, (KNF,properties))
+
+    satisfiable = output
+    if satisfiable:
+        print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:"," not implemented yet")
+    else:
+        print(satisfiable, f"in {time:.5f} Sekunden!")
+
+    results = ps.Stats(profile)
+    results.sort_stats(ps.SortKey.TIME)
+    results.reverse_order()
+    results.print_stats()
+    results.dump_stats("results.prof")
+    exit()
+
+
 specifiedArgument, path = arg.getArguments(ARGUMENTS)
+
 
 # first case: everything read properly
 if path != UNDEFINED:
@@ -31,7 +56,6 @@ if path != UNDEFINED:
 
             if specifiedArgument == "-cdcl":
                 var = list()
-                print(KNF)
                 time, output = ms.timeInSeconds(cdcl.cdcl, (KNF,properties))
 
                 satisfiable = output
@@ -58,11 +82,12 @@ if path != UNDEFINED:
                 var = list()
 
                 (satisfiable,variableAssignment)=dpll_visual.output_dpll_visual(KNF,path)
-
+                
                 if satisfiable:
                     print(satisfiable, "\nThe following variable assignment satisfies input cnf:",variableAssignment)
                 else:
                     print(satisfiable)
+                    
 
 
             # Initiate DPLL with unit resolution if parameter -udpll was given
