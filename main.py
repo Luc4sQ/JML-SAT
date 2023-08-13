@@ -23,7 +23,7 @@ UNDEFINED = 0
 
 
 with cp.Profile() as profile:
-    KNF, properties = sid.FileReader("../20gut/uf20-01.cnf")
+    KNF, properties = sid.FileReader("../50gut/uf50-01.cnf")
     var = list()
     time, output = ms.timeInSeconds(cdcl.cdcl, (KNF,properties))
 
