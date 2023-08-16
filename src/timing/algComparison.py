@@ -62,20 +62,14 @@ def dpllComp(path, slow):
                 # run the different versions of dpll on the specified files
 
                 timeDPLL, (satisfiableDPLL, variableAssignment) = ms.timeInSeconds(dpll.output_dpll, cnf)
-                print("d1")
 
                 timeUDPLL, (satisfiableUDPLL, variableAssignment) = ms.timeInSeconds(dpll.output_udpll, cnf)
-                print("d2")
 
                 timeDPLLple, (satisfiableDPLLple, variableAssignment) = ms.timeInSeconds(dpll.output_dpllple, cnf)
-                print("d3")
 
                 timeUDPLLple, (satisfiableUDPLLple, variableAssignment) = ms.timeInSeconds(dpll.output_udpllple, cnf)
-                print("d4")
 
                 timeCDCL, satisfiableCDCL = ms.timeInSeconds(cdcl.cdcl, (cnf, properties))
-
-                print("x")
 
                 # test weather we got different results for satisfiability for the various versions and print error message if so
                 if not satisfiableDPLL == satisfiableUDPLL and satisfiableDPLL == satisfiableUDPLLple and satisfiableDPLL == satisfiableDPLLple and satisfiableDPLLple == satisfiableCDCL:
