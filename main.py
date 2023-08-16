@@ -21,7 +21,7 @@ import tuna as tu
 ARGUMENTS = {"-bf", "-dpll","-dpll_visual", "-udpll", "-dpllple","-dpllple_visual", "-udpllple", "-udpll_visual", "-dp", "-DPLLcomp","-DPLLcomp_slow", "-HEURcomp", "-generateCNF","-multiHEURcomp","-multiHEURcomp_dpll","-multiDPLLcomp","-cdcl","-myStat"}
 UNDEFINED = 0
 
-
+"""
 with cp.Profile() as profile:
     KNF, properties = sid.FileReader("../50gut/uf50-01.cnf")
     var = list()
@@ -41,7 +41,7 @@ with cp.Profile() as profile:
     results.print_stats()
     results.dump_stats("results.prof")
     exit()
-
+"""
 
 specifiedArgument, path = arg.getArguments(ARGUMENTS)
 

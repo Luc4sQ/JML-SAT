@@ -284,6 +284,8 @@ def search(d):
 
     global IMPLICATION_GRAPH, CNF, VARIABLEPLACES, REDUCEDCNF, VALUE_ASSIGNMENT, DECISION_ASSIGNMENT, DECISION_TRACKER, NUMBEROFVARIABLES, NUMBEROFINITIALCLAUSES, BACKTRACKCOUNTER, RANDOMINDEX
     
+    #--------------------------------------------------------
+
     decideTime, decideOutput = ms.timeInSeconds(decide,d)
     if decideOutput:
         return True
@@ -306,6 +308,9 @@ def search(d):
         
         
         erase(d)
+        
+        #---------------------------------------------------
+        
         if RANDOMINDEX > 5:
             for  i, clause in enumerate(REDUCEDCNF):
                 if len(clause) == 1:
