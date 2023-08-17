@@ -17,209 +17,211 @@ import cProfile as cp
 import pstats as ps
 import tuna as tu
 
-# functioning code! returns a serious KNF
-ARGUMENTS = {"-bf", "-dpll","-dpll_visual", "-udpll", "-dpllple","-dpllple_visual", "-udpllple", "-udpll_visual", "-dp", "-DPLLcomp","-DPLLcomp_slow", "-HEURcomp", "-generateCNF","-multiHEURcomp","-multiHEURcomp_dpll","-multiDPLLcomp","-cdcl","-myStat"}
-UNDEFINED = 0
+if __name__ == "__main__":
 
-"""
-with cp.Profile() as profile:
-    KNF, properties = sid.FileReader("../50gut/uf50-01.cnf")
-    var = list()
-    time, output = ms.timeInSeconds(cdcl.cdcl, (KNF,properties))
+    # functioning code! returns a serious KNF
+    ARGUMENTS = {"-bf", "-dpll","-dpll_visual", "-udpll", "-dpllple","-dpllple_visual", "-udpllple", "-udpll_visual", "-dp", "-DPLLcomp","-DPLLcomp_slow", "-HEURcomp", "-generateCNF","-multiHEURcomp","-multiHEURcomp_dpll","-multiDPLLcomp","-cdcl","-myStat"}
+    UNDEFINED = 0
 
-    output = cdcl.cdcl(KNF,properties)
+    """
+    with cp.Profile() as profile:
+        KNF, properties = sid.FileReader("../50gut/uf50-01.cnf")
+        var = list()
+        time, output = ms.timeInSeconds(cdcl.cdcl, (KNF,properties))
 
-    satisfiable = output
-    if satisfiable:
-        print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:"," not implemented yet")
-    else:
-        print(satisfiable, f"in {time:.5f} Sekunden!")
+        output = cdcl.cdcl(KNF,properties)
 
-    results = ps.Stats(profile)
-    results.sort_stats(ps.SortKey.TIME)
-    results.reverse_order()
-    results.print_stats()
-    results.dump_stats("results.prof")
-    exit()
-"""
+        satisfiable = output
+        if satisfiable:
+            print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:"," not implemented yet")
+        else:
+            print(satisfiable, f"in {time:.5f} Sekunden!")
 
-specifiedArgument, path = arg.getArguments(ARGUMENTS)
+        results = ps.Stats(profile)
+        results.sort_stats(ps.SortKey.TIME)
+        results.reverse_order()
+        results.print_stats()
+        results.dump_stats("results.prof")
+        exit()
+    """
+
+    specifiedArgument, path = arg.getArguments(ARGUMENTS)
 
 
-# first case: everything read properly
-if path != UNDEFINED:
-    
-    # also check weather a comparison of algorithms should be done since the path specified will then be for folder not files
-    if specifiedArgument not in ["-DPLLcomp","-HEURcomp","-generateCNF","-multiHEURcomp","-multiDPLLcomp","-multiHEURcomp_dpll","-myStat"]:
-        KNF, properties = sid.FileReader(path)
-    
-        # AND: the file was a legit dimacs file
-        if KNF != UNDEFINED:
+    # first case: everything read properly
+    if path != UNDEFINED:
+        
+        # also check weather a comparison of algorithms should be done since the path specified will then be for folder not files
+        if specifiedArgument not in ["-DPLLcomp","-HEURcomp","-generateCNF","-multiHEURcomp","-multiDPLLcomp","-multiHEURcomp_dpll","-myStat"]:
+            KNF, properties = sid.FileReader(path)
+        
+            # AND: the file was a legit dimacs file
+            if KNF != UNDEFINED:
 
-            if specifiedArgument == "-cdcl":
-                var = list()
-                time, output = ms.timeInSeconds(cdcl.cdcl, (KNF,properties))
+                if specifiedArgument == "-cdcl":
+                    var = list()
+                    time, output = ms.timeInSeconds(cdcl.cdcl, (KNF,properties))
 
-                satisfiable = output
+                    satisfiable = output
 
-                if satisfiable:
-                    print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:"," not implemented yet")
-                else:
-                    print(satisfiable, f"in {time:.5f} Sekunden!")
+                    if satisfiable:
+                        print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:"," not implemented yet")
+                    else:
+                        print(satisfiable, f"in {time:.5f} Sekunden!")
 
-            # Initiate DPLL if parameter -dpll was given
-            if specifiedArgument == "-dpll":
-                var = list()
-                time, output = ms.timeInSeconds(dpll.output_dpll, KNF)
+                # Initiate DPLL if parameter -dpll was given
+                if specifiedArgument == "-dpll":
+                    var = list()
+                    time, output = ms.timeInSeconds(dpll.output_dpll, KNF)
 
-                satisfiable, variableAssignment = output
+                    satisfiable, variableAssignment = output
 
-                if satisfiable:
-                    print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
-                else:
-                    print(satisfiable, f"in {time:.5f} Sekunden!")
-            
-            # Initiate the visualised version of DPLL if parameter -dpll_visual was given
-            if specifiedArgument == "-dpll_visual":
-                var = list()
-
-                (satisfiable,variableAssignment)=dpll_visual.output_dpll_visual(KNF,path)
+                    if satisfiable:
+                        print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
+                    else:
+                        print(satisfiable, f"in {time:.5f} Sekunden!")
                 
-                if satisfiable:
-                    print(satisfiable, "\nThe following variable assignment satisfies input cnf:",variableAssignment)
-                else:
-                    print(satisfiable)
+                # Initiate the visualised version of DPLL if parameter -dpll_visual was given
+                if specifiedArgument == "-dpll_visual":
+                    var = list()
+
+                    (satisfiable,variableAssignment)=dpll_visual.output_dpll_visual(KNF,path)
                     
+                    if satisfiable:
+                        print(satisfiable, "\nThe following variable assignment satisfies input cnf:",variableAssignment)
+                    else:
+                        print(satisfiable)
+                        
 
 
-            # Initiate DPLL with unit resolution if parameter -udpll was given
-            if specifiedArgument == "-udpll":
-                var = list()
+                # Initiate DPLL with unit resolution if parameter -udpll was given
+                if specifiedArgument == "-udpll":
+                    var = list()
 
-                time, output = ms.timeInSeconds(dpll.output_udpll, KNF)
+                    time, output = ms.timeInSeconds(dpll.output_udpll, KNF)
 
-                satisfiable, variableAssignment = output
+                    satisfiable, variableAssignment = output
 
-                if satisfiable:
-                    print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
-                else:
-                    print(satisfiable, f"in {time:.5f} Sekunden!")
-            
-            
-            # Initiate DPLL with pure literal elimination if parameter -dpllple was given
-            if specifiedArgument == "-dpllple":
-                var = list()
+                    if satisfiable:
+                        print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
+                    else:
+                        print(satisfiable, f"in {time:.5f} Sekunden!")
+                
+                
+                # Initiate DPLL with pure literal elimination if parameter -dpllple was given
+                if specifiedArgument == "-dpllple":
+                    var = list()
 
-                time, output = ms.timeInSeconds(dpll.output_dpllple, KNF)
+                    time, output = ms.timeInSeconds(dpll.output_dpllple, KNF)
 
-                satisfiable, variableAssignment = output
+                    satisfiable, variableAssignment = output
 
-                if satisfiable:
-                    print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
-                else:
-                    print(satisfiable, f"in {time:.5f} Sekunden!")
-            
-            # Initiate DPLL with unit resolution and pure literal elimination if parameter -udpllple was given
-            if specifiedArgument == "-udpllple":
-                var = list()
+                    if satisfiable:
+                        print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
+                    else:
+                        print(satisfiable, f"in {time:.5f} Sekunden!")
+                
+                # Initiate DPLL with unit resolution and pure literal elimination if parameter -udpllple was given
+                if specifiedArgument == "-udpllple":
+                    var = list()
 
-                time, output = ms.timeInSeconds(dpll.output_udpllple, KNF)
+                    time, output = ms.timeInSeconds(dpll.output_udpllple, KNF)
 
-                satisfiable, variableAssignment = output
+                    satisfiable, variableAssignment = output
 
-                if satisfiable:
-                    print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
-                else:
-                    print(satisfiable, f"in {time:.5f} Sekunden!")
-
-
-            # Initiate the visualised version of DPLL with unit resolution if parameter -udpll_visual was given
-            if specifiedArgument == "-udpll_visual":
-                var = list()
-
-                (satisfiable,variableAssignment)=dpll_visual.output_udpll_visual(KNF,path)
-
-                if satisfiable:
-                    print(satisfiable, "\nThe following variable assignment satisfies input cnf:",variableAssignment)
-                else:
-                    print(satisfiable)
-
-            # Initiate the visualised version of DPLL with pure literal elimination if parameter -udpll_visual was given
-            if specifiedArgument == "-dpllple_visual":
-                var = list()
-
-                (satisfiable,variableAssignment)=dpll_visual.output_dpllple_visual(KNF,path)
-
-                if satisfiable:
-                    print(satisfiable, "\nThe following variable assignment satisfies input cnf:",variableAssignment)
-                else:
-                    print(satisfiable)
+                    if satisfiable:
+                        print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
+                    else:
+                        print(satisfiable, f"in {time:.5f} Sekunden!")
 
 
-            
-            # Initiate brute force if parameter -bf was given
-            if specifiedArgument == "-bf":
+                # Initiate the visualised version of DPLL with unit resolution if parameter -udpll_visual was given
+                if specifiedArgument == "-udpll_visual":
+                    var = list()
 
-                time, output = ms.timeInSeconds(br.bruteForce, (KNF, properties))
+                    (satisfiable,variableAssignment)=dpll_visual.output_udpll_visual(KNF,path)
 
-                satisfiable, variableAssignment = output
+                    if satisfiable:
+                        print(satisfiable, "\nThe following variable assignment satisfies input cnf:",variableAssignment)
+                    else:
+                        print(satisfiable)
 
-                if satisfiable:
-                    print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
-                else:
-                    print(satisfiable, f"in {time:.5f} Sekunden!")
+                # Initiate the visualised version of DPLL with pure literal elimination if parameter -udpll_visual was given
+                if specifiedArgument == "-dpllple_visual":
+                    var = list()
 
+                    (satisfiable,variableAssignment)=dpll_visual.output_dpllple_visual(KNF,path)
 
-            if specifiedArgument == "-dp":
-
-                time, output = ms.timeInSeconds(dp.backtrack, (KNF, properties))
-
-                satisfiable, variableAssignment = output
-
-                if satisfiable:
-                    print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
-                else:
-                    print(satisfiable, f"in {time:.5f} Sekunden!")
-
-    if specifiedArgument == "-myStat":
-        data = st.makeMultipleKNFs(path, "-cdcl")
-        values = st.reportStatistics(data)
-        print("standard deviation: ",values[1], " and mean: ",values[0])
-
-    if specifiedArgument == "-DPLLcomp":
-
-            comp.dpllComp(path, False)
-
-    if specifiedArgument == "-DPLLcomp_slow":
-
-            comp.dpllComp(path, True)
+                    if satisfiable:
+                        print(satisfiable, "\nThe following variable assignment satisfies input cnf:",variableAssignment)
+                    else:
+                        print(satisfiable)
 
 
-    if specifiedArgument == "-multiDPLLcomp":
+                
+                # Initiate brute force if parameter -bf was given
+                if specifiedArgument == "-bf":
 
-            comp.mutipleDPLLComp(path)
+                    time, output = ms.timeInSeconds(br.bruteForce, (KNF, properties))
+
+                    satisfiable, variableAssignment = output
+
+                    if satisfiable:
+                        print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
+                    else:
+                        print(satisfiable, f"in {time:.5f} Sekunden!")
 
 
-    if specifiedArgument == "-HEURcomp":
+                if specifiedArgument == "-dp":
 
-            comp.heuristicsComp(path)
+                    time, output = ms.timeInSeconds(dp.backtrack, (KNF, properties))
+
+                    satisfiable, variableAssignment = output
+
+                    if satisfiable:
+                        print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
+                    else:
+                        print(satisfiable, f"in {time:.5f} Sekunden!")
+
+        if specifiedArgument == "-myStat":
+            data = st.makeMultipleKNFs(path, "-cdcl")
+            values = st.reportStatistics(data)
+            print("standard deviation: ",values[1], " and mean: ",values[0])
+
+        if specifiedArgument == "-DPLLcomp":
+
+                comp.dpllComp(path, False)
+
+        if specifiedArgument == "-DPLLcomp_slow":
+
+                comp.dpllComp(path, True)
 
 
-    if specifiedArgument == "-multiHEURcomp":
+        if specifiedArgument == "-multiDPLLcomp":
 
-            comp.mutipleHeuristicComp(path,"udpll")
+                comp.mutipleDPLLComp(path)
 
-            
-    if specifiedArgument == "-multiHEURcomp_dpll":
-            
-            comp.mutipleHeuristicComp(path,"dpll")
-            
 
-    if specifiedArgument == "-generateCNF":
+        if specifiedArgument == "-HEURcomp":
 
-            genCNF.multipleCNFs(path)
-            
+                comp.heuristicsComp(path)
 
-# second case: nothing, because no proper arguments supplied
-else: 
-    pass
+
+        if specifiedArgument == "-multiHEURcomp":
+
+                comp.mutipleHeuristicComp(path,"udpll")
+
+                
+        if specifiedArgument == "-multiHEURcomp_dpll":
+                
+                comp.mutipleHeuristicComp(path,"dpll")
+                
+
+        if specifiedArgument == "-generateCNF":
+
+                genCNF.multipleCNFs(path)
+                
+
+    # second case: nothing, because no proper arguments supplied
+    else: 
+        pass
