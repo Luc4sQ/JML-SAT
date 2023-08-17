@@ -24,8 +24,7 @@ def orderOfVariablesRandom(properties):
     print(orderrenewed)
     return orderrenewed
 
-#function for ordering the variables
-#start with the one which occurs the most
+#start with the most occurring variable
 def orderOfVariablesMostOccurance(properties, cnf):
     order = []
     variable_list = np.array([])
@@ -46,7 +45,7 @@ def orderOfVariablesMostOccurance(properties, cnf):
     
     return order
 
-#start with the least occuring vairalbe
+#start with the least occurring variable
 def orderOfVariablesLeastOccurance(properties, cnf):
     order = orderOfVariablesMostOccurance(properties, cnf)
     order.reverse()
