@@ -329,17 +329,23 @@ def analyseGraph():
     while len(indexVector) != 0:
         
         listy = set()
+        #removeVector = set()
 
         for previousNode in indexVector:
             if len(Graph[previousNode]) == 0:
                 newClause.add(-1*previousNode*VALUE_ASSIGNMENT[previousNode])
                 continue
             
-            listy = listy | Graph[previousNode]
+            #listy = listy | Graph[previousNode]
 
             for node in Graph[previousNode]:
                 if previousNode != 0 and DECISION_ASSIGNMENT[previousNode] != DECISION_ASSIGNMENT[node]:
                     newClause.add(-1*node*VALUE_ASSIGNMENT[node])
+                    #removeVector.add(previousNode)
+                else:
+                    listy = listy | set([node])
+
+        #for vector in removeVector:
 
         indexVector = listy
 
