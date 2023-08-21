@@ -19,7 +19,7 @@ import tuna as tu
 if __name__ == "__main__":
 
     # functioning code! returns a serious KNF
-    ARGUMENTS = {"-bf", "-dpll","-dpll_visual", "-udpll", "-dpllple","-dpllple_visual", "-udpllple", "-udpll_visual", "-dp", "-DPLLcomp", "-HEURcomp", "-generateCNF","-multiHEURcomp","-multiHEURcomp_dpll","-multiDPLLcomp","-cdcl","-DPLLcomp_multi", "-uDPLLcomp_multi"}
+    ARGUMENTS = {"-bf", "-dpll","-dpll_visual", "-udpll", "-dpllple","-dpllple_visual", "-udpllple", "-udpll_visual", "-dp", "-DPLLcomp", "-HEURcomp", "-generateCNF","-multiHEURcomp","-multiHEURcomp_dpll","-multiDPLLcomp","-cdcl","-DPLLcomp_multi", "-uDPLLcomp_multi", "-findVarThreshold"}
     UNDEFINED = 0
 
     specifiedArgument, path = arg.getArguments(ARGUMENTS)
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     if path != UNDEFINED:
         
         # also check weather a comparison of algorithms should be done since the path specified will then be for folder not files
-        if specifiedArgument not in ["-DPLLcomp","-HEURcomp","-generateCNF","-multiHEURcomp","-multiDPLLcomp","-multiHEURcomp_dpll","-DPLLcomp_multi", "-uDPLLcomp_multi"]:
+        if specifiedArgument not in ["-DPLLcomp","-HEURcomp","-generateCNF","-multiHEURcomp","-multiDPLLcomp","-multiHEURcomp_dpll","-DPLLcomp_multi", "-uDPLLcomp_multi", "-findVarThreshold"]:
             KNF, properties = sid.FileReader(path)
         
             # AND: the file was a legit dimacs file
@@ -189,11 +189,18 @@ if __name__ == "__main__":
         if specifiedArgument == "-multiHEURcomp_dpll":
                 
                 comp.mutipleHeuristicComp(path,"dpll")
-                
 
         if specifiedArgument == "-generateCNF":
 
                 genCNF.multipleCNFs(path)
+
+        if specifiedArgument == "-findVarThreshold":
+
+                # uncomment the version with appropriate parameters for wanted length of clauses!
+                genCNF.generateAndMeasure(300,2, path)
+                #genCNF.generateAndMeasure(20,3, path)
+                #genCNF.generateAndMeasure(20,4,path)
+                #genCNF.generateAndMeasure(20,5,path)
                 
 
     # second case: nothing, because no proper arguments supplied

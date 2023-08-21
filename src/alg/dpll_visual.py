@@ -2,6 +2,7 @@ import numpy as np
 from io import StringIO
 import time
 import os
+import subprocess
 from src.alg.dpll import conditioning, findMostCommonVar, checkIfEmpty, unitResolution, pureLiteralElimination
 
 # Bio is a package including Phylo, which can be used to plog phylogenetic trees.
@@ -123,6 +124,13 @@ def dicToNewick(dictionary:dict):
 def clearScreen():
     os.system('cls' if os.name=='nt' else 'clear')
 
+
+# call the R script to crete the tree pictures
+def plotTrees(pathTreeTxt):
+    pathCurrent = "".join([os.path.dirname(os.path.realpath(__file__)),"/../Rcode/plotTrees.R"])
+    subprocess.call("".join(["Rscript ",pathCurrent," ",pathTreeTxt]), shell=True)
+
+
 waringing = "warning: To make the visualisation possible the speed of the algorithm was slowed down substantially, it might therefore run for a very long time."
 
 #######################################################################################################
@@ -186,7 +194,7 @@ def dpll_visual_alg(cnf):
         clearScreen()
         print(waringing)
         Phylo.draw_ascii(tree,column_width=80)
-        time.sleep(0.75)
+        time.sleep(0.1)
 
         if dpll_visual_alg(new_cnf)[0] != "unsat":
             var.append(var_candidate)
@@ -241,6 +249,9 @@ def output_dpll_visual(cnf,path):
     for i in range(len(tree_seq_list)):
         tree_dat.write(tree_seq_list[i])
     tree_dat.close()
+
+    # crete the pictures using a R script
+    plotTrees(out_path)
 
     if output == "unsat":
         satisfiability = False
@@ -347,7 +358,7 @@ def udpll_visual_alg(cnf):
         clearScreen()
         print(waringing)
         Phylo.draw_ascii(tree,column_width=80)
-        time.sleep(0.75)
+        time.sleep(0.1)
 
         # we need returned dpll literals, so we define them
         dpllOutput = udpll_visual_alg(new_cond_cnf)
@@ -415,6 +426,9 @@ def output_udpll_visual(cnf,path):
     for i in range(len(tree_seq_list)):
         tree_dat.write(tree_seq_list[i])
     tree_dat.close()
+
+    # create the pictures using a R script
+    plotTrees(out_path)
 
     if output == "unsat":
         satisfiability = False
@@ -522,7 +536,7 @@ def dpllple_visual_alg(cnf):
         clearScreen()
         print(waringing)
         Phylo.draw_ascii(tree,column_width=80)
-        time.sleep(0.75)
+        time.sleep(0.1)
 
         # we need returned dpll literals, so we define them
         dpllOutput = dpllple_visual_alg(new_cond_cnf)
@@ -590,6 +604,9 @@ def output_dpllple_visual(cnf,path):
     for i in range(len(tree_seq_list)):
         tree_dat.write(tree_seq_list[i])
     tree_dat.close()
+
+    # create the pictures using a R script
+    plotTrees(out_path)
 
     if output == "unsat":
         satisfiability = False
