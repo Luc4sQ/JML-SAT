@@ -19,7 +19,7 @@ import tuna as tu
 if __name__ == "__main__":
 
     # functioning code! returns a serious KNF
-    ARGUMENTS = {"-bf", "-dpll","-dpll_visual", "-udpll", "-dpllple","-dpllple_visual", "-udpllple", "-udpll_visual", "-dp", "-DPLLcomp", "-HEURcomp", "-generateCNF","-multiHEURcomp","-multiHEURcomp_dpll","-multiDPLLcomp","-cdcl"}
+    ARGUMENTS = {"-bf", "-dpll","-dpll_visual", "-udpll", "-dpllple","-dpllple_visual", "-udpllple", "-udpll_visual", "-dp", "-DPLLcomp", "-HEURcomp", "-generateCNF","-multiHEURcomp","-multiHEURcomp_dpll","-multiDPLLcomp","-cdcl","-DPLLcomp_multi", "-uDPLLcomp_multi"}
     UNDEFINED = 0
 
     specifiedArgument, path = arg.getArguments(ARGUMENTS)
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     if path != UNDEFINED:
         
         # also check weather a comparison of algorithms should be done since the path specified will then be for folder not files
-        if specifiedArgument not in ["-DPLLcomp","-HEURcomp","-generateCNF","-multiHEURcomp","-multiDPLLcomp","-multiHEURcomp_dpll","-myStat"]:
+        if specifiedArgument not in ["-DPLLcomp","-HEURcomp","-generateCNF","-multiHEURcomp","-multiDPLLcomp","-multiHEURcomp_dpll","-DPLLcomp_multi", "-uDPLLcomp_multi"]:
             KNF, properties = sid.FileReader(path)
         
             # AND: the file was a legit dimacs file
@@ -162,6 +162,14 @@ if __name__ == "__main__":
         if specifiedArgument == "-DPLLcomp":
 
                 comp.dpllComp(path)
+
+        if specifiedArgument == "-DPLLcomp_multi":
+             
+                comp.multicore_DPLLComp(path)
+
+        if specifiedArgument == "-uDPLLcomp_multi":
+             
+                comp.multicore_uDPLLComp(path)
 
         if specifiedArgument == "-multiDPLLcomp":
 

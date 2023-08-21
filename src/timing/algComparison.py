@@ -12,6 +12,157 @@ import concurrent.futures as cf
 ########### DPLL, uDPLL, uDPLLple and CDCL ##################################################################
 #######################################################################################################
 
+def prepareHelper(package):
+
+    tuple = prepare(package[0], package[1], package[2])
+
+    if package[2]:
+        print(package[0], " (CDCL, DPLL + unit, DPLL + unit + ple)", " + " ,tuple)
+    else:
+        print(package[0]," (CDCL, DPLL + unit, DPLL + unit + ple, DPLL + ple, DPLL)", " + " ,tuple)
+    return tuple
+
+def prepare(file, path, isUDPLL):
+
+    if file.endswith("cnf"):
+
+        wholePath = "".join([path,file])
+        cnf, properties = sid.FileReader(wholePath)
+
+        if isUDPLL:
+
+            timeUDPLL, (satisfiableUDPLL, variableAssignment) = ms.timeInSeconds(dpll.output_udpll, cnf)
+            timeUDPLLple, (satisfiableUDPLLple, variableAssignment) = ms.timeInSeconds(dpll.output_udpllple, cnf)
+            timeCDCL, satisfiableCDCL = ms.timeInSeconds(cdcl.cdcl, (cnf, properties))
+
+            return (timeCDCL, timeUDPLL, timeUDPLLple)
+
+        else:
+
+            timeDPLL, (satisfiableDPLL, variableAssignment) = ms.timeInSeconds(dpll.output_dpll, cnf)
+            timeUDPLL, (satisfiableUDPLL, variableAssignment) = ms.timeInSeconds(dpll.output_udpll, cnf)
+            timeDPLLple, (satisfiableDPLLple, variableAssignment) = ms.timeInSeconds(dpll.output_dpllple, cnf)
+            timeUDPLLple, (satisfiableUDPLLple, variableAssignment) = ms.timeInSeconds(dpll.output_udpllple, cnf)
+            timeCDCL, satisfiableCDCL = ms.timeInSeconds(cdcl.cdcl, (cnf, properties))
+
+            return (timeCDCL, timeUDPLL, timeUDPLLple, timeDPLLple, timeDPLL)
+
+
+
+def multicore_uDPLLComp(path):
+
+    # TODO: if no CNFs are in folder, print error
+    if not path.endswith("/"):
+        print("ERROR: path for a folder with CNFs needs to be provided")
+        
+    else:
+
+        out_path = "".join([path, "SATstats_dpll.txt"])
+        stats_dat = open(out_path,"w+")
+
+        # TODO: add info about System test was run on, date and time, ...
+
+        files = os.listdir(path)
+
+        # define the empty arrays in which the stats will be written during the actual measurements
+        uDPLLresList = np.array([])
+        uDPLLpleresList = np.array([])
+        CDCLresList = np.array([])
+
+
+        with cf.ProcessPoolExecutor() as exec:
+            list = [(file,path,True) for file in files]
+            results = exec.map(prepareHelper, list)
+
+            for result in results:
+                try:
+                    timeCDCL, timeUDPLL, timeUDPLLple = result
+
+                    uDPLLresList = np.append(uDPLLresList,timeUDPLL)
+                    uDPLLpleresList = np.append(uDPLLpleresList,timeUDPLLple)
+                    CDCLresList = np.append(CDCLresList, timeCDCL)
+                except:
+                    print("error?")
+
+
+        #set parameter determining how many decimales to round to in result
+        decimals = 4
+
+        # calculate mean and std and write to file
+        stats_dat.write("Comparison of DPLL with Unit Resolution (uDPLL), DPLL with Unit Resolution and Pure Literal Elimination (uDPLLple) and CDCL \n\n")
+        stats_dat.write("".join(["Tests were run on ",str(len(files))," CNF formulas \n\n"]))
+        stats_dat.write("\n\nSummary: \n\n")
+        stats_dat.write("Average time to determine satifyability in seconds: \n")
+        stats_dat.write("".join(["DPLL: ",str(0),"  uDPLL: ",str(round(np.mean(uDPLLresList),decimals)),"  DPLLple: ",str(0),"  uDPLLple: ",str(round(np.mean(uDPLLpleresList),decimals)),"  CDCL: ",str(round(np.mean(CDCLresList),decimals)),"\n\n"]))
+        stats_dat.write("Standard deviation of time to determine satifyability in seconds: \n")
+        stats_dat.write("".join(["DPLL: ",str(0),"  uDPLL: ",str(round(np.std(uDPLLresList),decimals)),"  DPLLple: ",str(0),"  uDPLLple: ",str(round(np.std(uDPLLpleresList),decimals)), "  CDCL: ",str(round(np.std(CDCLresList),decimals)),"\n\n"]))
+        
+        stats_dat.close()
+        
+    csv = ""
+
+    return(csv)
+
+def multicore_DPLLComp(path):
+
+    
+    # TODO: if no CNFs are in folder, print error
+    if not path.endswith("/"):
+        print("ERROR: path for a folder with CNFs needs to be provided")
+        
+    else:
+
+        out_path = "".join([path, "SATstats_dpll.txt"])
+        stats_dat = open(out_path,"w+")
+
+        # TODO: add info about System test was run on, date and time, ...
+
+        files = os.listdir(path)
+
+        # define the empty arrays in which the stats will be written during the actual measurements
+        DPLLresList = np.array([])
+        uDPLLresList = np.array([])
+        DPLLpleresList = np.array([])
+        uDPLLpleresList = np.array([])
+        CDCLresList = np.array([])
+
+
+        with cf.ProcessPoolExecutor() as exec:
+            list = [(file,path,False) for file in files]
+            results = exec.map(prepareHelper, list)
+
+            for result in results:
+                try:
+                    timeCDCL, timeUDPLL, timeUDPLLple, timeDPLLple, timeDPLL = result
+
+                    DPLLresList = np.append(DPLLresList,timeDPLL)
+                    uDPLLresList = np.append(uDPLLresList,timeUDPLL)
+                    DPLLpleresList = np.append(DPLLpleresList,timeDPLLple)
+                    uDPLLpleresList = np.append(uDPLLpleresList,timeUDPLLple)
+                    CDCLresList = np.append(CDCLresList, timeCDCL)
+                except:
+                    print("error?")
+
+
+        #set parameter determining how many decimales to round to in result
+        decimals = 4
+
+        # calculate mean and std and write to file
+        stats_dat.write("Comparison of DPLL with Unit Resolution (uDPLL), DPLL with Unit Resolution and Pure Literal Elimination (uDPLLple) and CDCL \n\n")
+        stats_dat.write("".join(["Tests were run on ",str(len(files))," CNF formulas \n\n"]))
+        stats_dat.write("\n\nSummary: \n\n")
+        stats_dat.write("Average time to determine satifyability in seconds: \n")
+        stats_dat.write("".join(["DPLL: ",str(round(np.mean(DPLLresList),decimals)),"  uDPLL: ",str(round(np.mean(uDPLLresList),decimals)),"  DPLLple: ",str(round(np.mean(DPLLpleresList),decimals)),"  uDPLLple: ",str(round(np.mean(uDPLLpleresList),decimals)),"  CDCL: ",str(round(np.mean(CDCLresList),decimals)),"\n\n"]))
+        stats_dat.write("Standard deviation of time to determine satifyability in seconds: \n")
+        stats_dat.write("".join(["DPLL: ",str(round(np.std(DPLLresList),decimals)),"  uDPLL: ",str(round(np.std(uDPLLresList),decimals)),"  DPLLple: ",str(round(np.std(DPLLpleresList),decimals)),"  uDPLLple: ",str(round(np.std(uDPLLpleresList),decimals)), "  CDCL: ",str(round(np.std(CDCLresList),decimals)),"\n\n"]))
+        
+        stats_dat.close()
+        
+    csv = ""
+
+    return(csv)
+
+
 # compare the multiple versions of dpll based on files in a given folder
 def dpllComp(path):
 
