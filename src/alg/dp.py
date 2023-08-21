@@ -3,15 +3,54 @@ import numpy as np
 #bucket_set
 bucket_set = []
 
-#function for ordering the variables
+#functions for ordering the variables
+# 1. standard order
+# 2. random order
+# 3. most occurance
+# 4. least occurance
+
+#functions for ordering the variables
 def orderOfVariables(properties):
+    order = []
+    for var in range(1, properties[2]+1):
+        order.append(var)
+    return order
+
+def orderOfVariablesRandom(properties):
     order = []
     for var in range(1,properties[2]+1):
         order.append(var)
-    #return order
     orderrenewed = list(np.random.permutation(order))
     print(orderrenewed)
     return orderrenewed
+
+#start with the most occurring variable
+def orderOfVariablesMostOccurance(properties, cnf):
+    order = []
+    variable_list = np.array([])
+    for clause in cnf:
+        for var in clause:
+            variable_list = np.append(variable_list, abs(var))
+
+    variables, counts = np.unique(variable_list, return_counts=True)
+    
+    length = len(variables)
+    for index in range(length):
+        #get the variable with most occurance
+        max_index = np.argmax(counts)
+        order.append(variables[max_index])
+        #delete the variable with most occurance
+        variables = np.delete(variables, max_index)
+        counts = np.delete(counts, max_index)
+    
+    return order
+
+#start with the least occurring variable
+def orderOfVariablesLeastOccurance(properties, cnf):
+    order = orderOfVariablesMostOccurance(properties, cnf)
+    order.reverse()
+    return order
+
 
 def isTautologie(clause):
     for index1 in range(len(clause)):
@@ -125,7 +164,10 @@ def dp(cnf, properties):
         return "unsat"
     else:
         #ordering variables (algorithm for getting a better order?)
-        order = orderOfVariables(properties)
+        #order = orderOfVariables(properties)
+        #order = orderOfVariablesRandom(properties)
+        #order = orderOfVariablesMostOccurance(properties, cnf)
+        order = orderOfVariablesLeastOccurance(properties, cnf)
 
         #creating a bucket in bucketset for every variable
         for var in order:
