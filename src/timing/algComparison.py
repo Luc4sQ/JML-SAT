@@ -7,42 +7,13 @@ import src.alg.dpll as dpll
 import src.alg.cdcl as cdcl
 import concurrent.futures as cf
 
+
 #######################################################################################################
-########### DPLL, uDPLL AND uDPLLple ##################################################################
+########### DPLL, uDPLL, uDPLLple and CDCL ##################################################################
 #######################################################################################################
-def prepareHelper(package):
-
-    tuple = prepare(package[0], package[1])
-    print(package[0], " + " ,tuple)
-    #print(tuple)
-    return tuple
-
-def prepare(file, path):
-
-    if file.endswith("cnf"):
-
-        #CNFcount = CNFcount + 1
-
-        # extract cnf
-        wholePath = "".join([path,file])
-        cnf, properties = sid.FileReader(wholePath)
-
-        # run the different versions of dpll on the specified files
-
-        #timeDPLL, (satisfiableDPLL, variableAssignment) = ms.timeInSeconds(dpll.output_dpll, cnf)
-
-        timeUDPLL, (satisfiableUDPLL, variableAssignment) = ms.timeInSeconds(dpll.output_udpll, cnf)
-
-        #timeDPLLple, (satisfiableDPLLple, variableAssignment) = ms.timeInSeconds(dpll.output_dpllple, cnf)
-
-        timeUDPLLple, (satisfiableUDPLLple, variableAssignment) = ms.timeInSeconds(dpll.output_udpllple, cnf)
-
-        timeCDCL, satisfiableCDCL = ms.timeInSeconds(cdcl.cdcl, (cnf, properties))
-
-        return (timeCDCL, timeUDPLL, timeUDPLLple)
 
 # compare the multiple versions of dpll based on files in a given folder
-def dpllComp(path, slow):
+def dpllComp(path):
 
     # if the files in the folder were written by this program, we can extract information from the folder name
     selfGeneratedCNF = True
@@ -61,11 +32,11 @@ def dpllComp(path, slow):
         files = os.listdir(path)
 
         # create control points at which a status update will be printed in the terminal (if more than 20 formulas are in folder)
-        #stepCount = 50
-        #controlPoints = np.array([])
-        #if len(files) >= stepCount:
-        #    for j in range(1,stepCount):
-        #        controlPoints = np.append(controlPoints,files[j*round(len(files)/stepCount)])
+        stepCount = 50
+        controlPoints = np.array([])
+        if len(files) >= stepCount:
+            for j in range(1,stepCount):
+                controlPoints = np.append(controlPoints,files[j*round(len(files)/stepCount)])
 
         # define the empty arrays in which the stats will be written during the actual measurements
         DPLLresList = np.array([])
@@ -74,79 +45,60 @@ def dpllComp(path, slow):
         uDPLLpleresList = np.array([])
         CDCLresList = np.array([])
 
-
         # keep track of how many files were considered and how many were satisfiable 
         SATcount = 0
         CNFcount = 0
 
-        with cf.ProcessPoolExecutor() as exec:
-            list = [(file,path) for file in files]
-            results = exec.map(prepareHelper, list)
-
-            for result in results:
-                try:
-                    timeCDCL, timeUDPLL, timeUDPLLple = result
-
-                    #DPLLresList = np.append(DPLLresList,timeDPLL)
-                    uDPLLresList = np.append(uDPLLresList,timeUDPLL)
-                    #DPLLpleresList = np.append(DPLLpleresList,timeDPLLple)
-                    uDPLLpleresList = np.append(uDPLLpleresList,timeUDPLLple)
-                    CDCLresList = np.append(CDCLresList, timeCDCL)
-                except:
-                    print("error?")
-
-
-
         # iterativeley measure time it took to determine satisfiablilty for each of the algorythms
-        #for file in files:
-            #if file.endswith("cnf"):
+        for file in files:
 
-                #CNFcount = CNFcount + 1
+            if file.endswith("cnf"):
+
+                CNFcount = CNFcount + 1
 
                 # extract cnf
-                #wholePath = "".join([path,file])
-                #cnf, properties = sid.FileReader(wholePath)
+                wholePath = "".join([path,file])
+                cnf, properties = sid.FileReader(wholePath)
 
                 # run the different versions of dpll on the specified files
 
-                #timeDPLL, (satisfiableDPLL, variableAssignment) = ms.timeInSeconds(dpll.output_dpll, cnf)
+                timeDPLL, (satisfiableDPLL, variableAssignment) = ms.timeInSeconds(dpll.output_dpll, cnf)
 
-                #timeUDPLL, (satisfiableUDPLL, variableAssignment) = ms.timeInSeconds(dpll.output_udpll, cnf)
+                timeUDPLL, (satisfiableUDPLL, variableAssignment) = ms.timeInSeconds(dpll.output_udpll, cnf)
 
-                #timeDPLLple, (satisfiableDPLLple, variableAssignment) = ms.timeInSeconds(dpll.output_dpllple, cnf)
+                timeDPLLple, (satisfiableDPLLple, variableAssignment) = ms.timeInSeconds(dpll.output_dpllple, cnf)
 
-                #timeUDPLLple, (satisfiableUDPLLple, variableAssignment) = ms.timeInSeconds(dpll.output_udpllple, cnf)
+                timeUDPLLple, (satisfiableUDPLLple, variableAssignment) = ms.timeInSeconds(dpll.output_udpllple, cnf)
 
-                #timeCDCL, satisfiableCDCL = ms.timeInSeconds(cdcl.cdcl, (cnf, properties))
+                timeCDCL, satisfiableCDCL = ms.timeInSeconds(cdcl.cdcl, (cnf, properties))
 
                 # test weather we got different results for satisfiability for the various versions and print error message if so
-                #if not satisfiableDPLL == satisfiableUDPLL and satisfiableDPLL == satisfiableUDPLLple and satisfiableDPLL == satisfiableDPLLple and satisfiableDPLLple == satisfiableCDCL:
-                #    print("ERROR: file",file,"resulted in different SAT results: DPLL:",satisfiableDPLL,"uDPLL:",satisfiableUDPLL,"uDPLLple:",satisfiableUDPLLple, "CDCL:", satisfiableCDCL)
-                #else:
+                if not satisfiableDPLL == satisfiableUDPLL and satisfiableDPLL == satisfiableUDPLLple and satisfiableDPLL == satisfiableDPLLple:
+                    print("ERROR: file",file,"resulted in different SAT results: DPLL:",satisfiableDPLL,"uDPLL:",satisfiableUDPLL,"uDPLLple:",satisfiableUDPLLple)
+                else:
                     # append the results to the respective lists of results
-                    #SATcount = SATcount+1
-                    #DPLLresList = np.append(DPLLresList,timeDPLL)
-                    #uDPLLresList = np.append(uDPLLresList,timeUDPLL)
-                    #DPLLpleresList = np.append(DPLLpleresList,timeDPLLple)
-                    #uDPLLpleresList = np.append(uDPLLpleresList,timeUDPLLple)
-                    #CDCLresList = np.append(CDCLresList, timeCDCL)
+                    SATcount = SATcount+1
+                    DPLLresList = np.append(DPLLresList,timeDPLL)
+                    uDPLLresList = np.append(uDPLLresList,timeUDPLL)
+                    DPLLpleresList = np.append(DPLLpleresList,timeDPLLple)
+                    uDPLLpleresList = np.append(uDPLLpleresList,timeUDPLLple)
+                    CDCLresList = np.append(CDCLresList, timeCDCL)
 
-            #if file in controlPoints:
-            #    print("".join((str((np.where(controlPoints==file)[0][0]+1)*(100/stepCount)),"% of files processed \n")))
-        
+            if file in controlPoints:
+                print("".join((str((np.where(controlPoints==file)[0][0]+1)*(100/stepCount)),"% of files processed \n")))
 
         #set parameter determining how many decimales to round to in result
         decimals = 4
 
         # calculate mean and std and write to file
-        stats_dat.write("Comparison of DPLL, DPLL with Unit Resolution (uDPLL) and of DPLL with Unit Resolution and Pure Literal Elimination (uDPLLple) \n\n")
+        stats_dat.write("Comparison of DPLL, DPLL with Unit Resolution (uDPLL), DPLL with Unit Resolution and Pure Literal Elimination (uDPLLple) and of CDCL \n\n")
         stats_dat.write("".join(["Tests were run on ",str(len(files))," CNF formulas \n\n"]))
         stats_dat.write("\n\nSummary: \n\n")
         stats_dat.write("Average time to determine satifyability in seconds: \n")
-        stats_dat.write("".join(["DPLL: ",str(0),"  uDPLL: ",str(round(np.mean(uDPLLresList),decimals)),"  DPLLple: ",str(0),"  uDPLLple: ",str(round(np.mean(uDPLLpleresList),decimals)),"  CDCL: ",str(round(np.mean(CDCLresList),decimals)),"\n\n"]))
+        stats_dat.write("".join(["DPLL: ",str(round(np.mean(DPLLresList),decimals)),"  uDPLL: ",str(round(np.mean(uDPLLresList),decimals)),"  DPLLple: ",str(round(np.mean(DPLLpleresList),decimals)),"  uDPLLple: ",str(round(np.mean(uDPLLpleresList),decimals)),"  CDCL: ",str(round(np.mean(CDCLresList),decimals)),"\n\n"]))
         stats_dat.write("Standard deviation of time to determine satifyability in seconds: \n")
-        stats_dat.write("".join(["DPLL: ",str(0),"  uDPLL: ",str(round(np.std(uDPLLresList),decimals)),"  DPLLple: ",str(0),"  uDPLLple: ",str(round(np.std(uDPLLpleresList),decimals)), "  CDCL: ",str(round(np.std(CDCLresList),decimals)),"\n\n"]))
-        #stats_dat.write("".join(["Overall ",str(SATcount/CNFcount),"% of CNFs were satisfiable"]))
+        stats_dat.write("".join(["DPLL: ",str(round(np.std(DPLLresList),decimals)),"  uDPLL: ",str(round(np.std(uDPLLresList),decimals)),"  DPLLple: ",str(round(np.std(DPLLpleresList),decimals)),"  uDPLLple: ",str(round(np.std(uDPLLpleresList),decimals)),"  CDCL: ",str(round(np.std(CDCLresList),decimals)),"\n\n"]))
+        stats_dat.write("".join(["Overall ",str(SATcount/CNFcount),"% of CNFs were satisfiable"]))
         stats_dat.close()
         
         # extract meta information from folder name

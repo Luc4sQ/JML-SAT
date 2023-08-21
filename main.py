@@ -9,7 +9,6 @@ import src.timing.algComparison as comp
 import src.alg.dpll as dpll
 import src.alg.dp as dp
 import src.alg.cdcl as cdcl
-import src.timing.statistics as st
 
 import src.alg.dpll_visual as dpll_visual
 
@@ -20,33 +19,10 @@ import tuna as tu
 if __name__ == "__main__":
 
     # functioning code! returns a serious KNF
-    ARGUMENTS = {"-bf", "-dpll","-dpll_visual", "-udpll", "-dpllple","-dpllple_visual", "-udpllple", "-udpll_visual", "-dp", "-DPLLcomp","-DPLLcomp_slow", "-HEURcomp", "-generateCNF","-multiHEURcomp","-multiHEURcomp_dpll","-multiDPLLcomp","-cdcl","-myStat"}
+    ARGUMENTS = {"-bf", "-dpll","-dpll_visual", "-udpll", "-dpllple","-dpllple_visual", "-udpllple", "-udpll_visual", "-dp", "-DPLLcomp", "-HEURcomp", "-generateCNF","-multiHEURcomp","-multiHEURcomp_dpll","-multiDPLLcomp","-cdcl"}
     UNDEFINED = 0
 
-    """
-    with cp.Profile() as profile:
-        KNF, properties = sid.FileReader("../50gut/uf50-01.cnf")
-        var = list()
-        time, output = ms.timeInSeconds(cdcl.cdcl, (KNF,properties))
-
-        output = cdcl.cdcl(KNF,properties)
-
-        satisfiable = output
-        if satisfiable:
-            print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:"," not implemented yet")
-        else:
-            print(satisfiable, f"in {time:.5f} Sekunden!")
-
-        results = ps.Stats(profile)
-        results.sort_stats(ps.SortKey.TIME)
-        results.reverse_order()
-        results.print_stats()
-        results.dump_stats("results.prof")
-        exit()
-    """
-
     specifiedArgument, path = arg.getArguments(ARGUMENTS)
-
 
     # first case: everything read properly
     if path != UNDEFINED:
@@ -183,19 +159,9 @@ if __name__ == "__main__":
                     else:
                         print(satisfiable, f"in {time:.5f} Sekunden!")
 
-        if specifiedArgument == "-myStat":
-            data = st.makeMultipleKNFs(path, "-cdcl")
-            values = st.reportStatistics(data)
-            print("standard deviation: ",values[1], " and mean: ",values[0])
-
         if specifiedArgument == "-DPLLcomp":
 
-                comp.dpllComp(path, False)
-
-        if specifiedArgument == "-DPLLcomp_slow":
-
-                comp.dpllComp(path, True)
-
+                comp.dpllComp(path)
 
         if specifiedArgument == "-multiDPLLcomp":
 
