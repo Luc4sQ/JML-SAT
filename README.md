@@ -62,6 +62,8 @@ Die gewünschten Charakteristika können dann in dieser Reihenfolge angegeben we
 Für jede Zeile werden zwei Ordner mit den Dateien erstellt: Einer mit erfüllbaren und einer mit nicht erfüllbaren Formeln.
 Es kann sein, dass einer der beiden Ordner leer ist, das liegt daran, dass das Programm bei dem Versuch, sowohl so viele erfüllbare als auch so viele nicht erfüllbare CNFs zu erstellen wie gewünscht, nur maximal zehn mal so viele CNFs generiert und testet wie generiert werden sollen. Sonst würde das Programm bei manchen Parameterkombinationen, bei denen Erfüllbarkeit oder Nicht-Erfüllbarkeit sehr unwahrscheinlich ist, endlos lange laufen.
 
+- "-findVarThreshold" : Testet für gegebene Anzahl an Variablen und Klausellänge den Anteil an erfüllbaren von 400 erzeugten KNFS für verschiedene Klausel-Anzahlen und berechnet die durchschnittliche Berechnungszeit. Gibt eine Graphik aus, die die Ergebnisse veranschaulicht. Parameterwerte können im Code geändert werden.
+
 # Tests über mehrere Files oder Filter mit selbst erstellten Files
 - "-DPLLcomp" : Braucht den Pfad zu einem Ordner mit CNFs, erstellt eine .txt Datei mit Informationen über die durschnittliche Zeit und die Standardabweichung, die die verschiednene Versionen von DPLL benötigen, um die Erfüllbarkeit zu bestimmen
 - "-HEURcomp" : Analog zu "-DPLLcomp", nur dass hier die verschiedenen Heuristiken für DPLL verglichen werden
