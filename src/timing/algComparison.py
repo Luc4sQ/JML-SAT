@@ -7,6 +7,8 @@ import src.input.dimacs as sid
 import src.timing.measure as ms
 import src.alg.dpll as dpll
 import src.other.dpll as odpll
+import src.other.brute_force as obf
+import src.alg.bruteforce as bf
 import src.alg.cdcl as cdcl
 import concurrent.futures as cf
 
@@ -57,8 +59,8 @@ def prepare(file, path, isUDPLL, isOTHER):
             
             timeUDPLL, (satisfiableUDPLL, variableAssignment) = ms.timeInSeconds(dpll.output_udpll, cnf)
             timeUDPLLple, (satisfiableUDPLLple, variableAssignment) = ms.timeInSeconds(dpll.output_udpllple, cnf)
-            timeCDCL, satisfiableCDCL = ms.timeInSeconds(cdcl.cdcl, (cnf, properties))
-            timeOTHER, (satisfiableOTHER, assignment) = ms.timeInSeconds(odpll.dpll, (convertedCNF, []))
+            timeCDCL, (satisfiableCDCL, belegung) = ms.timeInSeconds(bf.bruteForce, (cnf, properties))
+            timeOTHER, satisfiableOTHER = ms.timeInSeconds(obf.brute_force, (convertedCNF))
 
             print(satisfiableOTHER)
 
