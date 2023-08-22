@@ -1,4 +1,5 @@
 # Importing some stuff
+import time as tm
 import numpy as np
 import src.input.args as arg
 import src.input.dimacs as sid
@@ -9,6 +10,7 @@ import src.timing.algComparison as comp
 import src.alg.dpll as dpll
 import src.alg.dp as dp
 import src.alg.cdcl as cdcl
+import src.other.dpll as odpll
 
 import src.alg.dpll_visual as dpll_visual
 
@@ -19,7 +21,7 @@ import tuna as tu
 if __name__ == "__main__":
 
     # functioning code! returns a serious KNF
-    ARGUMENTS = {"-bf", "-dpll","-dpll_visual", "-udpll", "-dpllple","-dpllple_visual", "-udpllple", "-udpll_visual", "-dp", "-DPLLcomp", "-HEURcomp", "-generateCNF","-multiHEURcomp","-multiHEURcomp_dpll","-multiDPLLcomp","-cdcl","-DPLLcomp_multi", "-uDPLLcomp_multi", "-findVarThreshold"}
+    ARGUMENTS = {"-other","-bf", "-dpll","-dpll_visual", "-udpll", "-dpllple","-dpllple_visual", "-udpllple", "-udpll_visual", "-dp", "-DPLLcomp", "-HEURcomp", "-generateCNF","-multiHEURcomp","-multiHEURcomp_dpll","-multiDPLLcomp","-cdcl","-DPLLcomp_multi", "-uDPLLcomp_multi", "-findVarThreshold", "-competition"}
     UNDEFINED = 0
 
     specifiedArgument, path = arg.getArguments(ARGUMENTS)
@@ -28,7 +30,7 @@ if __name__ == "__main__":
     if path != UNDEFINED:
         
         # also check weather a comparison of algorithms should be done since the path specified will then be for folder not files
-        if specifiedArgument not in ["-DPLLcomp","-HEURcomp","-generateCNF","-multiHEURcomp","-multiDPLLcomp","-multiHEURcomp_dpll","-DPLLcomp_multi", "-uDPLLcomp_multi", "-findVarThreshold"]:
+        if specifiedArgument not in ["-DPLLcomp","-HEURcomp","-generateCNF","-multiHEURcomp","-multiDPLLcomp","-multiHEURcomp_dpll","-DPLLcomp_multi", "-uDPLLcomp_multi", "-findVarThreshold", "-competition"]:
             KNF, properties = sid.FileReader(path)
         
             # AND: the file was a legit dimacs file
@@ -42,6 +44,27 @@ if __name__ == "__main__":
 
                     if satisfiable:
                         print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:"," not implemented yet")
+                    else:
+                        print(satisfiable, f"in {time:.5f} Sekunden!")
+
+                if specifiedArgument == "-other":
+                    var = list()
+
+                    convertedCNF = [array.tolist() for array in KNF]
+
+                    #print(convertedCNF)
+                    #time, output = ms.timeInSeconds(dpll.output_dpll, KNF)
+
+                    start = tm.perf_counter()
+
+                    satisfiable, variableAssignment = odpll.dpll(convertedCNF,[])
+
+                    end = tm.perf_counter()
+
+                    time = end - start
+
+                    if satisfiable:
+                        print(satisfiable, f"in {time:.5f} Sekunden!","\nThe following variable assignment satisfies input cnf:",variableAssignment)
                     else:
                         print(satisfiable, f"in {time:.5f} Sekunden!")
 
@@ -201,6 +224,10 @@ if __name__ == "__main__":
                 #genCNF.generateAndMeasure(20,3, path)
                 #genCNF.generateAndMeasure(20,4,path)
                 #genCNF.generateAndMeasure(20,5,path)
+
+        if specifiedArgument == "-competition":
+             
+                comp.competition(path)
                 
 
     # second case: nothing, because no proper arguments supplied
