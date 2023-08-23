@@ -2,6 +2,8 @@ import numpy as np
 import src.alg.dpll as dpll
 import os
 import csv
+import src.timing.measure as ms
+import subprocess
 
 # generate a single cnf with desired properties
 def generateCNF(varNum,clauseNum,clauseNumDet,clauseLen,clauseLenDet):
@@ -50,9 +52,12 @@ def generateCNF(varNum,clauseNum,clauseNumDet,clauseLen,clauseLenDet):
         clauseList.append(newClause)
         
     # test satisfiability
-    SAT = dpll.output_udpll(clauseList,heuristics="DLIS")[0]
+    #SAT = dpll.output_udpll(clauseList,heuristics="DLIS")[0]
+    time, output = ms.timeInSeconds(dpll.output_udpll, clauseList)
+
+    SAT = output[0]
         
-    return(SAT,clauseList)
+    return(SAT,clauseList,time)
 
 # generate two folders containing a specified number of satisfiable and not satisfiable cnfs with given properties
 def output(path,n=200,varNum=20,clauseNum=100,clauseNumDet="DET",clauseLen=3,clauseLenDet="DET"):
@@ -77,7 +82,7 @@ def output(path,n=200,varNum=20,clauseNum=100,clauseNumDet="DET",clauseLen=3,cla
     while ((SATcount < n) or (unSATcount < n)) and attemts <= n*10:
 
         # generate a cnf
-        (SAT,clauseList) = generateCNF(varNum,clauseNum,clauseNumDet,clauseLen,clauseLenDet)
+        (SAT,clauseList,time) = generateCNF(varNum,clauseNum,clauseNumDet,clauseLen,clauseLenDet)
         attemts = attemts + 1
 
         # and test if it was SAT or unSAT and weather the desired amount of files in the cathegory wasnt reached already. 
@@ -151,3 +156,63 @@ def multipleCNFs(path):
             # create cnfs with properties in generated folder
             output(dirPath,number,varCount,ClauseCount,ClauseCountDet,ClauseLength,ClauseLengthDet)
             print("".join(["generated files ",str(varCount),"vars_",ClauseCountDet,str(ClauseCount),"clauseCount_",ClauseLengthDet,str(ClauseLength),"clauseLength"]))
+
+# create a graph that shows the ration between satisfiability and not satisfiability and how long computation took
+def generateAndMeasure(varNum, clauseLen, outpath):
+    
+    # uncomment the version with appropriate parameters for wanted length of clauses!
+    # generate a span in which we consider the clause Count
+    # for k=2
+    clauseMin = 1*varNum
+    clauseMax = 1.8*varNum
+    # for k=3
+    #clauseMin = 2*varNum
+    #clauseMax = 8*varNum
+    # for k=4
+    #clauseMin = 8*varNum
+    #clauseMax = 16*varNum
+    # for k=5
+    #clauseMin = 16*varNum
+    #clauseMax = 24*varNum
+    
+    # how many CNFs should be analysed for each clause num?
+    attemptNum = 100
+
+    # crete list of clause lengths for which we want to test
+    clauseGrid = np.linspace(clauseMin,clauseMax,20).round()
+    
+    # initialize an array that we will fill with the average times and SAT stats
+    SATstats = np.array([])
+    timeStats = np.array
+
+    # ocrate and pen a csv file to write to
+    outFilePath = "".join([outpath, "SAT_threshold_var",str(varNum),"k",str(clauseLen),"for",str(attemptNum),"ncfs",".csv"])
+    stats_dat = open(outFilePath,"w+")
+    stats_dat.write("Clause_Number, Average_Time, Satisfiable_Fraction\n")
+
+    # generate CNFs, measure time and Satisfiability and calculate stats
+    for clauseNum in clauseGrid:
+        SATcounter = 0
+        timesInS = np.array([])
+        for i in range(0,attemptNum):
+            (SAT,clauseList,time) = generateCNF(varNum,clauseNum,"DET",clauseLen,"DET")
+            if SAT == True:
+                SATcounter = SATcounter + 1
+            timesInS = np.append(timesInS,time)
+        averageTime = np.average(timesInS)
+        SATstats = np.append(SATstats,SATcounter/attemptNum)
+        timeStats = np.append(timeStats,averageTime)
+
+        stats_dat.write("".join([str(clauseNum),",",str(averageTime),",",str(SATcounter/attemptNum),"\n"]))
+
+        print("".join(["calculated and tested ",str((clauseNum/clauseMax)*100),"% of CNFs, but calculations get exceedingly slower"]), end="\r")
+
+    stats_dat.write("")
+    stats_dat.close()
+
+     # call the R script to crete the tree pictures
+    pathCurrent = "".join([os.path.dirname(os.path.realpath(__file__)),"/../Rcode/PlotSATthresholt.R"])
+    subprocess.call("".join(["Rscript ",pathCurrent," ",str(clauseLen)," ",str(varNum)," ",outFilePath]), shell=True)
+
+
+    return(clauseGrid)
